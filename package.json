@@ -1,0 +1,27 @@
+{
+  "name": "webbundle-webpack-plugin",
+  "version": "0.0.0",
+  "description": "Webpack plugin to generate WebBundle output.",
+  "main": "index.js",
+  "scripts": {
+    "test": "ava"
+  },
+  "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",
+  "license": "Apache-2.0",
+  "peerDependencies": {
+    "webpack": "^4.0.0"
+  },
+  "dependencies": {
+    "mime": "^2.4.4",
+    "wbn": "0.0.4",
+    "webpack-sources": "^1.4.3"
+  },
+  "devDependencies": {
+    "ava": "^3.0.0",
+    "memory-fs": "^0.5.0",
+    "webpack": "^4.41.5"
+  },
+  "engines": {
+    "node": ">= 8.0.0"
+  }
+}
