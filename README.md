@@ -1,6 +1,6 @@
 # webbundle-webpack-plugin
 
-A Webpack plugin which generates [Web Bundles](https://wicg.github.io/webpackage/draft-yasskin-wpack-bundled-exchanges.html) output.
+A Webpack plugin which generates [Web Bundles](https://wicg.github.io/webpackage/draft-yasskin-wpack-bundled-exchanges.html) output. Currently the spec is still a draft, so this package is also in alpha until the spec stabilizes.
 
 ## Requirements
 
@@ -18,6 +18,7 @@ npm install webbundle-webpack-plugin --save-dev
 This example assumes your application entry point is `src/index.js` and static files (including `index.html`) are located in `static` directory.
 ```js
 /* webpack.config.js */
+const path = require('path');
 const WebBundlePlugin = require('webbundle-webpack-plugin');
 
 module.exports = {
