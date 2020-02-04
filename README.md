@@ -1,6 +1,6 @@
 # rollup-plugin-webbundle
 
-A Rollup plugin which generates [Web Bundles](https://wicg.github.io/webpackage/draft-yasskin-wpack-bundled-exchanges.html) output.
+A Rollup plugin which generates [Web Bundles](https://wicg.github.io/webpackage/draft-yasskin-wpack-bundled-exchanges.html) output. Currently the spec is still a draft, so this package is also in alpha until the spec stabilizes.
 
 ## Requirements
 
