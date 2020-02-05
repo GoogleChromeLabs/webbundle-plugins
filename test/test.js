@@ -52,7 +52,10 @@ test('simple', async (t) => {
   const { output } = await bundle.generate({ format: 'esm' });
   const keys = Object.keys(output);
   t.is(keys.length, 1);
-  t.is(output[keys[0]].type, 'asset');
+  if (output[keys[0]].type)
+    t.is(output[keys[0]].type, 'asset');
+  else
+    t.true(output[keys[0]].isAsset);
   t.is(output[keys[0]].fileName, 'out.wbn');
   
   t.snapshot(parseWebBundle(output[keys[0]].source));
@@ -81,7 +84,10 @@ test('asset', async (t) => {
   });
   const keys = Object.keys(output);
   t.is(keys.length, 1);
-  t.is(output[keys[0]].type, 'asset');
+  if (output[keys[0]].type)
+    t.is(output[keys[0]].type, 'asset');
+  else
+    t.true(output[keys[0]].isAsset);
   t.is(output[keys[0]].fileName, 'out.wbn');
 
   t.snapshot(parseWebBundle(output[keys[0]].source));
@@ -101,7 +107,10 @@ test('static', async (t) => {
   const { output } = await bundle.generate({ format: 'esm' });
   const keys = Object.keys(output);
   t.is(keys.length, 1);
-  t.is(output[keys[0]].type, 'asset');
+  if (output[keys[0]].type)
+    t.is(output[keys[0]].type, 'asset');
+  else
+    t.true(output[keys[0]].isAsset);
   t.is(output[keys[0]].fileName, 'out.wbn');
 
   t.snapshot(parseWebBundle(output[keys[0]].source));
