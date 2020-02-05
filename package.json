@@ -17,11 +17,16 @@
     "webpack-sources": "^1.4.3"
   },
   "devDependencies": {
-    "ava": "^3.0.0",
+    "ava": "^2.4.0",
     "memory-fs": "^0.5.0",
     "webpack": "^4.41.5"
   },
   "engines": {
     "node": ">= 8.0.0"
+  },
+  "ava": {
+    "files": [
+      "!**/fixtures/**"
+    ]
   }
 }

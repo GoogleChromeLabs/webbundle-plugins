@@ -15,8 +15,9 @@
  */
 
 const mime = require('mime');
-const { BundleBuilder } = require('wbn');
-const { RawSource } = require('webpack-sources');
+const {URL} = require('url');
+const {BundleBuilder} = require('wbn');
+const {RawSource} = require('webpack-sources');
 
 const defaults = {
   output: 'out.wbn'
@@ -24,7 +25,7 @@ const defaults = {
 
 module.exports = class WebBundlePlugin {
   constructor(opts) {
-    this.opts = Object.assign({}, defaults, { primaryURL: opts.baseURL }, opts);
+    this.opts = Object.assign({}, defaults, {primaryURL: opts.baseURL}, opts);
   }
 
   apply(compiler) {
