@@ -16,10 +16,15 @@
     "wbn": "0.0.4"
   },
   "devDependencies": {
-    "ava": "^3.0.0",
+    "ava": "^2.4.0",
     "rollup": "^1.29.0"
   },
   "engines": {
     "node": ">= 8.0.0"
+  },
+  "ava": {
+    "files": [
+      "!**/fixtures/**"
+    ]
   }
 }
