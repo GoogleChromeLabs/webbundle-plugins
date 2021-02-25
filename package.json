@@ -17,7 +17,7 @@
     "webpack-sources": "^1.4.3"
   },
   "devDependencies": {
-    "ava": "^2.4.0",
+    "ava": "^3.15.0",
     "memory-fs": "^0.5.0",
     "webpack": "^4.41.5"
   },

@@ -15,7 +15,6 @@
  */
 
 const mime = require('mime');
-const {URL} = require('url');
 const {BundleBuilder} = require('wbn');
 const {RawSource} = require('webpack-sources');
 

@@ -4,7 +4,7 @@ A Webpack plugin which generates [Web Bundles](https://wicg.github.io/webpackage
 
 ## Requirements
 
-This plugin requires Node v8.0.0+ and Webpack v4.0.0+.
+This plugin requires Node v10.0.0+ and Webpack v4.0.0+.
 
 ## Install
 
