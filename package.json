@@ -9,7 +9,7 @@
   "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",
   "license": "Apache-2.0",
   "peerDependencies": {
-    "rollup": "^1.0.0"
+    "rollup": ">=1.0.0 <3.0.0"
   },
   "dependencies": {
     "mime": "^2.4.4",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "ava": "^3.15.0",
-    "rollup": "^1.29.0"
+    "rollup": "^2.39.1"
   },
   "engines": {
     "node": ">= 10.0.0"
