@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-webbundle",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Rollup plugin to generate WebBundle output.",
   "main": "lib/index.js",
   "scripts": {
@@ -8,12 +8,16 @@
   },
   "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GoogleChromeLabs/rollup-plugin-webbundle.git"
+  },
   "peerDependencies": {
     "rollup": ">=1.21.0 <3.0.0"
   },
   "dependencies": {
     "mime": "^2.4.4",
-    "wbn": "0.0.4"
+    "wbn": "0.0.5"
   },
   "devDependencies": {
     "ava": "^3.15.0",
