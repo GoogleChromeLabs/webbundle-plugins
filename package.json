@@ -9,7 +9,7 @@
   "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",
   "license": "Apache-2.0",
   "peerDependencies": {
-    "webpack": "^4.0.0"
+    "webpack": ">=4.0.0 <6.0.0"
   },
   "dependencies": {
     "mime": "^2.4.4",
@@ -19,7 +19,7 @@
   "devDependencies": {
     "ava": "^3.15.0",
     "memory-fs": "^0.5.0",
-    "webpack": "^4.41.5"
+    "webpack": "^5.24.2"
   },
   "engines": {
     "node": ">= 8.0.0"

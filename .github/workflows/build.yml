@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         node-version: [10.x, 12.x, 14.x]
-        webpack-version: [4.0.x, ^4.0.0]
+        webpack-version: [4.0.x, ^4.0.0, 5.0.x, ^5.0.0]
 
     steps:
     - uses: actions/checkout@v2

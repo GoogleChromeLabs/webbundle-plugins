@@ -16,6 +16,7 @@
 
 const mime = require('mime');
 const {BundleBuilder} = require('wbn');
+const webpack = require('webpack');
 const {RawSource} = require('webpack-sources');
 
 const defaults = {
@@ -27,29 +28,42 @@ module.exports = class WebBundlePlugin {
     this.opts = Object.assign({}, defaults, {primaryURL: opts.baseURL}, opts);
   }
 
-  apply(compiler) {
-    compiler.hooks.emit.tap(
-      'WebBundlePlugin',
-      (compilation) => {
-        const opts = this.opts;
-        const builder = new BundleBuilder(opts.primaryURL || opts.baseURL);
-        if (opts.static) {
-          builder.addFilesRecursively(opts.static.baseURL || opts.baseURL, opts.static.dir);
-        }
+  process(compilation) {
+    const opts = this.opts;
+    const builder = new BundleBuilder(opts.primaryURL || opts.baseURL);
+    if (opts.static) {
+      builder.addFilesRecursively(opts.static.baseURL || opts.baseURL, opts.static.dir);
+    }
 
-        for (const key of Object.keys(compilation.assets)) {
-          // 'dir/index.html' is stored as 'dir/' in WBN.
-          const url = new URL(key, opts.baseURL).toString().replace(/\/index.html$/, '/');
-          const headers = {
-            'Content-Type': mime.getType(key) || 'application/octet-stream',
-            'Access-Control-Allow-Origin': '*'
-          };
-          const source = compilation.assets[key].source();
-          const buf = Buffer.isBuffer(source) ? source : Buffer.from(source);
-          builder.addExchange(url, 200, headers, buf);
+    for (const key of Object.keys(compilation.assets)) {
+      // 'dir/index.html' is stored as 'dir/' in WBN.
+      const url = new URL(key, opts.baseURL).toString().replace(/\/index.html$/, '/');
+      const headers = {
+        'Content-Type': mime.getType(key) || 'application/octet-stream',
+        'Access-Control-Allow-Origin': '*'
+      };
+      const source = compilation.assets[key].source();
+      const buf = Buffer.isBuffer(source) ? source : Buffer.from(source);
+      builder.addExchange(url, 200, headers, buf);
+    }
+    compilation.assets[opts.output] = new RawSource(builder.createBundle());
+  }
+
+  apply(compiler) {
+    if (webpack.version.startsWith('4.')) {
+      compiler.hooks.emit.tap('WebBundlePlugin', this.process.bind(this));
+    } else {
+      compiler.hooks.thisCompilation.tap('WebBundlePlugin',
+        (compilation) => {
+          compilation.hooks.processAssets.tap(
+            {
+              name: 'WebBundlePlugin',
+              stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER
+            },
+            () => this.process(compilation)
+          );
         }
-        compilation.assets[opts.output] = new RawSource(builder.createBundle());
-      }
-    );
+      );
+    }
   }
 }
