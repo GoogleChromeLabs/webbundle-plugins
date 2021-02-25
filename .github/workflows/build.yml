@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         node-version: [10.x, 12.x, 14.x]
-        rollup-version: [1.0.x, 1.21.x, ^1.0.0, ^2.0.0]
+        rollup-version: [1.21.x, ^1.0.0, ^2.0.0]
 
     steps:
     - uses: actions/checkout@v2

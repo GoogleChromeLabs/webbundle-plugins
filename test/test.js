@@ -68,7 +68,11 @@ test('asset', async (t) => {
       {
         name: 'add-asset',
         generateBundle() {
-          this.emitAsset('hello.txt', 'Hello');
+          this.emitFile({
+            type: 'asset',
+            name: 'hello.txt',
+            source: 'Hello'
+          });
         }
       },
       webbundle({
