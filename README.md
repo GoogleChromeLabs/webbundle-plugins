@@ -4,7 +4,7 @@ A Rollup plugin which generates [Web Bundles](https://wicg.github.io/webpackage/
 
 ## Requirements
 
-This plugin requires Node v10.0.0+ and Rollup v1.21.0+.
+This plugin requires Node v12.0.0+ and Rollup v1.21.0+.
 
 ## Install
 
@@ -42,6 +42,12 @@ A WBN file `dist/out.wbn` should be written.
 Type: `string`
 
 Specifies the URL prefix prepended to the file names in the bundle. This must be an absolute URL that ends with `/`.
+
+### `formatVersion`
+Type: `string`<br>
+Default `b2`
+
+Specifies WebBundle format version.
 
 ### `primaryURL`
 Type: `string`<br>

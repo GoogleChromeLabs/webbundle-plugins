@@ -36,6 +36,7 @@ function parseWebBundle(buf) {
     };
   }
   return {
+    version: bundle.version,
     primaryURL: bundle.primaryURL,
     exchanges
   };
@@ -79,6 +80,7 @@ test('asset', async (t) => {
         }
       },
       webbundle({
+        formatVersion: 'b1',
         baseURL: 'https://wbn.example.com/',
         primaryURL: 'https://wbn.example.com/assets/hello.txt',
         output: 'out.wbn'
