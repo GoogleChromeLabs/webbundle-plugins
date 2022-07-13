@@ -29,10 +29,18 @@ function parseWebBundle(buf) {
   const exchanges = {};
   for (const url of bundle.urls) {
     const resp = bundle.getResponse(url);
+    let body = new TextDecoder('utf-8').decode(resp.body);
+
+    // Our test snapshots are generated with Rollup 2, but Rollup 1 uses
+    // different syntax for default export.
+    if (rollup.VERSION.startsWith('1.')) {
+      body = body.replace('export default index', 'export { index as default }');
+    }
+
     exchanges[url] = {
       status: resp.status,
       headers: resp.headers,
-      body: new TextDecoder('utf-8').decode(resp.body)
+      body: body
     };
   }
   return {
