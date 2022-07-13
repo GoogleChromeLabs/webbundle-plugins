@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Rollup plugin to generate WebBundle output.",
   "main": "lib/index.js",
+  "type": "module",
   "scripts": {
     "test": "ava"
   },

@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-const test = require('ava');
-const rollup = require('rollup');
-const wbn = require('wbn');
-const webbundle = require('..');
+import test from 'ava';
+import * as path from 'path';
+import * as rollup from 'rollup';
+import url from 'url';
+import * as wbn from 'wbn';
+import webbundle from '../lib/index.js';
 
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 process.chdir(__dirname);
 
 function parseWebBundle(buf) {
