@@ -57,7 +57,7 @@ test('basic', async t => {
   t.is(bundle.primaryURL, primaryURL);
   t.deepEqual(bundle.urls, [primaryURL]);
   const resp = bundle.getResponse(primaryURL);
-  t.is(resp.body.toString(), js.toString());
+  t.is(new TextDecoder('utf-8').decode(resp.body), js.toString());
 });
 
 test('static', async t => {
@@ -74,5 +74,5 @@ test('static', async t => {
   t.is(bundle.primaryURL, primaryURL);
   t.deepEqual(bundle.urls.sort(), [primaryURL, 'https://example.com/index.html', 'https://example.com/main.js']);
   const resp = bundle.getResponse(primaryURL);
-  t.is(resp.body.toString(), html.toString());
+  t.is(new TextDecoder('utf-8').decode(resp.body), html.toString());
 });

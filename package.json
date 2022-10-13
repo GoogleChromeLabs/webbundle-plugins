@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "mime": "^2.4.4",
-    "wbn": "0.0.5",
+    "wbn": "0.0.8",
     "webpack-sources": "^1.4.3"
   },
   "devDependencies": {

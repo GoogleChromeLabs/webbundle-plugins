@@ -14,13 +14,45 @@
  * limitations under the License.
  */
 
+const fs = require('fs');
+const path = require('path');
 const mime = require('mime');
 const {BundleBuilder} = require('wbn');
 const webpack = require('webpack');
 const {RawSource} = require('webpack-sources');
 
 const defaults = {
+  formatVersion: 'b2',
   output: 'out.wbn'
+}
+
+function addFile(builder, url, file) {
+  const headers = {
+    'Content-Type': mime.getType(file) || 'application/octet-stream',
+  };
+  builder.addExchange(url, 200, headers, fs.readFileSync(file));
+}
+
+function addFilesRecursively(builder, baseURL, dir) {
+  if (baseURL !== '' && !baseURL.endsWith('/')) {
+    throw new Error("Non-empty baseURL must end with '/'.");
+  }
+  const files = fs.readdirSync(dir);
+  files.sort(); // Sort entries for reproducibility.
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    if (fs.statSync(filePath).isDirectory()) {
+      addFilesRecursively(builder, baseURL + file + '/', filePath);
+    } else if (file === 'index.html') {
+      // If the file name is 'index.html', create an entry for baseURL itself
+      // and another entry for baseURL/index.html which redirects to baseURL.
+      // This matches the behavior of gen-bundle.
+      addFile(builder, baseURL, filePath);
+      builder.addExchange(baseURL + file, 301, { Location: './' }, '');
+    } else {
+      addFile(builder, baseURL + file, filePath);
+    }
+  }
 }
 
 module.exports = class WebBundlePlugin {
@@ -30,9 +62,14 @@ module.exports = class WebBundlePlugin {
 
   process(compilation) {
     const opts = this.opts;
-    const builder = new BundleBuilder(opts.primaryURL || opts.baseURL);
+    const builder = new BundleBuilder(opts.formatVersion);
+    const primaryURL = opts.primaryURL || opts.baseURL;
+    if (!primaryURL) {
+      throw new Error('Please specify primaryURL.');
+    }
+    builder.setPrimaryURL(primaryURL);
     if (opts.static) {
-      builder.addFilesRecursively(opts.static.baseURL || opts.baseURL, opts.static.dir);
+      addFilesRecursively(builder, opts.static.baseURL || opts.baseURL, opts.static.dir);
     }
 
     for (const key of Object.keys(compilation.assets)) {
