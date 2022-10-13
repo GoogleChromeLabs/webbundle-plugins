@@ -1,10 +1,10 @@
 # webbundle-webpack-plugin
 
-A Webpack plugin which generates [Web Bundles](https://wicg.github.io/webpackage/draft-yasskin-wpack-bundled-exchanges.html) output. Currently the spec is still a draft, so this package is also in alpha until the spec stabilizes.
+A Webpack plugin which generates [Web Bundles](https://wpack-wg.github.io/bundled-responses/draft-ietf-wpack-bundled-responses.html) output. Currently the spec is still a draft, so this package is also in alpha until the spec stabilizes.
 
 ## Requirements
 
-This plugin requires Node v10.0.0+ and Webpack v4.0.0+.
+This plugin requires Node v12.0.0+ and Webpack v4.0.0+.
 
 ## Install
 
@@ -61,6 +61,15 @@ Type: `string`<br>
 Default: `out.wbn`
 
 Specifies the file name of the Web Bundle to emit.
+
+### `formatVersion`
+Type: `string`<br>
+Default: `b2`
+
+Specifies WebBundle format version.
+
+- version `b2` follows [the latest version of the Web Bundles spec](https://datatracker.ietf.org/doc/html/draft-yasskin-wpack-bundled-exchanges-04) (default).
+- version `b1` follows [the previous version of the Web Bundles spec](https://datatracker.ietf.org/doc/html/draft-yasskin-wpack-bundled-exchanges-03).
 
 ## License
 Licensed under the Apache-2.0 license.
