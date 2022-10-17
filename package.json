@@ -1,6 +1,6 @@
 {
   "name": "webbundle-webpack-plugin",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Webpack plugin to generate WebBundle output.",
   "main": "index.js",
   "scripts": {
@@ -17,16 +17,16 @@
   },
   "dependencies": {
     "mime": "^2.4.4",
-    "wbn": "^0.0.8",
+    "wbn": "0.0.8",
     "webpack-sources": "^1.4.3"
   },
   "devDependencies": {
-    "ava": "^3.15.0",
+    "ava": "^4.3.3",
     "memory-fs": "^0.5.0",
-    "webpack": "^5.24.2"
+    "webpack": "^5.74.0"
   },
   "engines": {
-    "node": ">= 8.0.0"
+    "node": ">= 12.0.0"
   },
   "ava": {
     "files": [

@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
+const fs = require('fs');
+const path = require('path');
 const mime = require('mime');
 const {BundleBuilder} = require('wbn');
 const webpack = require('webpack');
 const {RawSource} = require('webpack-sources');
-const fs = require('fs');
-const path = require('path');
 
 const defaults = {
+  formatVersion: 'b2',
   output: 'out.wbn'
 }
 
 function addFile(builder, url, file) {
   const headers = {
     'Content-Type': mime.getType(file) || 'application/octet-stream',
-    'Access-Control-Allow-Origin': '*'
   };
   builder.addExchange(url, 200, headers, fs.readFileSync(file));
 }
@@ -65,7 +65,7 @@ module.exports = class WebBundlePlugin {
 
   process(compilation) {
     const opts = this.opts;
-    const builder = new BundleBuilder(opts.formatVersion || 'b2');
+    const builder = new BundleBuilder(opts.formatVersion);
     if (opts.primaryURL) {
       builder.setPrimaryURL(opts.primaryURL);
     }
