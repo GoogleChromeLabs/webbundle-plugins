@@ -40,7 +40,7 @@ module.exports = {
 A WBN file `dist/example.wbn` should be written.
 
 ## Options
-### `baseURL` (required)
+### `baseURL`
 Type: `string`
 
 Specifies the URL prefix prepended to the file names in the bundle. This must be an absolute URL that ends with `/`.
@@ -49,7 +49,7 @@ Specifies the URL prefix prepended to the file names in the bundle. This must be
 Type: `string`<br>
 Default: baseURL
 
-Specifies the bundle's main resource URL. If omitted, the value of the `baseURL` option is used.
+Specifies the bundle's main resource URL.
 
 ### `static`
 Type: `{ dir: String, baseURL?: string }`
