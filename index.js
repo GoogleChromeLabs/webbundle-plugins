@@ -57,31 +57,40 @@ function addFilesRecursively(builder, baseURL, dir) {
 
 module.exports = class WebBundlePlugin {
   constructor(opts) {
-    this.opts = Object.assign({}, defaults, {primaryURL: opts.baseURL}, opts);
+    this.opts = Object.assign({}, defaults, {baseURL: ''}, opts);
+    if (this.opts.baseURL !== '' && !this.opts.baseURL.endsWith('/')) {
+      throw new Error('Non-empty base URL must end with "/".');
+    }
   }
 
   process(compilation) {
     const opts = this.opts;
     const builder = new BundleBuilder(opts.formatVersion);
-    const primaryURL = opts.primaryURL || opts.baseURL;
-    if (!primaryURL) {
-      throw new Error('Please specify primaryURL.');
+    if (opts.primaryURL) {
+      builder.setPrimaryURL(opts.primaryURL);
     }
-    builder.setPrimaryURL(primaryURL);
     if (opts.static) {
       addFilesRecursively(builder, opts.static.baseURL || opts.baseURL, opts.static.dir);
     }
 
     for (const key of Object.keys(compilation.assets)) {
-      // 'dir/index.html' is stored as 'dir/' in WBN.
-      const url = new URL(key, opts.baseURL).toString().replace(/\/index.html$/, '/');
       const headers = {
         'Content-Type': mime.getType(key) || 'application/octet-stream',
         'Access-Control-Allow-Origin': '*'
       };
       const source = compilation.assets[key].source();
       const buf = Buffer.isBuffer(source) ? source : Buffer.from(source);
-      builder.addExchange(url, 200, headers, buf);
+
+      const filePath = path.parse(key);
+      if (filePath.base === 'index.html') {
+        // If the file name is 'index.html', create an entry for baseURL/dir/
+        // and another entry for baseURL/dir/index.html which redirects to it.
+        // This matches the behavior of gen-bundle.
+        builder.addExchange(opts.baseURL + filePath.dir, 200, headers, buf);
+        builder.addExchange(opts.baseURL + key, 301, {Location: './'}, '');
+      } else {
+        builder.addExchange(opts.baseURL + key, 200, headers, buf);
+      }
     }
     compilation.assets[opts.output] = new RawSource(builder.createBundle());
   }
