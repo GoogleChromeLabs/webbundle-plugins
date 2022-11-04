@@ -17,14 +17,14 @@
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime');
-const {BundleBuilder} = require('wbn');
+const { BundleBuilder } = require('wbn');
 const webpack = require('webpack');
-const {RawSource} = require('webpack-sources');
+const { RawSource } = require('webpack-sources');
 
 const defaults = {
   formatVersion: 'b2',
-  output: 'out.wbn'
-}
+  output: 'out.wbn',
+};
 
 function addFile(builder, url, file) {
   const headers = {
@@ -57,7 +57,7 @@ function addFilesRecursively(builder, baseURL, dir) {
 
 module.exports = class WebBundlePlugin {
   constructor(opts) {
-    this.opts = Object.assign({}, defaults, {baseURL: ''}, opts);
+    this.opts = Object.assign({}, defaults, { baseURL: '' }, opts);
     if (this.opts.baseURL !== '' && !this.opts.baseURL.endsWith('/')) {
       throw new Error('Non-empty base URL must end with "/".');
     }
@@ -70,13 +70,17 @@ module.exports = class WebBundlePlugin {
       builder.setPrimaryURL(opts.primaryURL);
     }
     if (opts.static) {
-      addFilesRecursively(builder, opts.static.baseURL || opts.baseURL, opts.static.dir);
+      addFilesRecursively(
+        builder,
+        opts.static.baseURL || opts.baseURL,
+        opts.static.dir
+      );
     }
 
     for (const key of Object.keys(compilation.assets)) {
       const headers = {
         'Content-Type': mime.getType(key) || 'application/octet-stream',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
       };
       const source = compilation.assets[key].source();
       const buf = Buffer.isBuffer(source) ? source : Buffer.from(source);
@@ -87,7 +91,7 @@ module.exports = class WebBundlePlugin {
         // and another entry for baseURL/dir/index.html which redirects to it.
         // This matches the behavior of gen-bundle.
         builder.addExchange(opts.baseURL + filePath.dir, 200, headers, buf);
-        builder.addExchange(opts.baseURL + key, 301, {Location: './'}, '');
+        builder.addExchange(opts.baseURL + key, 301, { Location: './' }, '');
       } else {
         builder.addExchange(opts.baseURL + key, 200, headers, buf);
       }
@@ -99,17 +103,15 @@ module.exports = class WebBundlePlugin {
     if (webpack.version.startsWith('4.')) {
       compiler.hooks.emit.tap('WebBundlePlugin', this.process.bind(this));
     } else {
-      compiler.hooks.thisCompilation.tap('WebBundlePlugin',
-        (compilation) => {
-          compilation.hooks.processAssets.tap(
-            {
-              name: 'WebBundlePlugin',
-              stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER
-            },
-            () => this.process(compilation)
-          );
-        }
-      );
+      compiler.hooks.thisCompilation.tap('WebBundlePlugin', (compilation) => {
+        compilation.hooks.processAssets.tap(
+          {
+            name: 'WebBundlePlugin',
+            stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+          },
+          () => this.process(compilation)
+        );
+      });
     }
   }
-}
+};
