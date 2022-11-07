@@ -17,10 +17,10 @@ npm install rollup-plugin-webbundle --save-dev
 ## Usage
 This example assumes your application entry point is `src/index.js` and static files (including `index.html`) are located in `static` directory.
 ```js
-/* rollup.config.js */
-const webbundle = require('rollup-plugin-webbundle');
+/* rollup.config.mjs */
+import webbundle from 'rollup-plugin-webbundle';
 
-module.exports = {
+export default {
   input: 'src/index.js',
   output: {
     dir: 'dist',
