@@ -69,7 +69,7 @@ test('simple', async (t) => {
   else
     t.true(output[keys[0]].isAsset);
   t.is(output[keys[0]].fileName, 'out.wbn');
-  
+
   t.snapshot(parseWebBundle(output[keys[0]].source));
 });
 
@@ -116,6 +116,30 @@ test('static', async (t) => {
     plugins: [
       webbundle({
         baseURL: 'https://wbn.example.com/',
+        primaryURL: 'https://wbn.example.com/',
+        output: 'out.wbn',
+        static: { dir: 'fixtures/static' }
+      })
+    ]
+  });
+  const { output } = await bundle.generate({ format: 'esm' });
+  const keys = Object.keys(output);
+  t.is(keys.length, 1);
+  if (output[keys[0]].type)
+    t.is(output[keys[0]].type, 'asset');
+  else
+    t.true(output[keys[0]].isAsset);
+  t.is(output[keys[0]].fileName, 'out.wbn');
+
+  t.snapshot(parseWebBundle(output[keys[0]].source));
+});
+
+test('relative', async (t) => {
+  const bundle = await rollup.rollup({
+    input: 'fixtures/index.js',
+    plugins: [
+      webbundle({
+        baseURL: '/',
         output: 'out.wbn',
         static: { dir: 'fixtures/static' }
       })
