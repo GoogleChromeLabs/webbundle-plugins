@@ -34,19 +34,22 @@ function parseWebBundle(buf) {
     // Our test snapshots are generated with Rollup 2, but Rollup 1 uses
     // different syntax for default export.
     if (rollup.VERSION.startsWith('1.')) {
-      body = body.replace('export default index', 'export { index as default }');
+      body = body.replace(
+        'export default index',
+        'export { index as default }'
+      );
     }
 
     exchanges[url] = {
       status: resp.status,
       headers: resp.headers,
-      body: body
+      body: body,
     };
   }
   return {
     version: bundle.version,
     primaryURL: bundle.primaryURL,
-    exchanges
+    exchanges,
   };
 }
 
@@ -57,17 +60,15 @@ test('simple', async (t) => {
       webbundle({
         baseURL: 'https://wbn.example.com/',
         primaryURL: 'https://wbn.example.com/index.js',
-        output: 'out.wbn'
-      })
-    ]
+        output: 'out.wbn',
+      }),
+    ],
   });
   const { output } = await bundle.generate({ format: 'esm' });
   const keys = Object.keys(output);
   t.is(keys.length, 1);
-  if (output[keys[0]].type)
-    t.is(output[keys[0]].type, 'asset');
-  else
-    t.true(output[keys[0]].isAsset);
+  if (output[keys[0]].type) t.is(output[keys[0]].type, 'asset');
+  else t.true(output[keys[0]].isAsset);
   t.is(output[keys[0]].fileName, 'out.wbn');
 
   t.snapshot(parseWebBundle(output[keys[0]].source));
@@ -83,28 +84,26 @@ test('asset', async (t) => {
           this.emitFile({
             type: 'asset',
             name: 'hello.txt',
-            source: 'Hello'
+            source: 'Hello',
           });
-        }
+        },
       },
       webbundle({
         formatVersion: 'b1',
         baseURL: 'https://wbn.example.com/',
         primaryURL: 'https://wbn.example.com/assets/hello.txt',
-        output: 'out.wbn'
-      })
-    ]
+        output: 'out.wbn',
+      }),
+    ],
   });
   const { output } = await bundle.generate({
     format: 'esm',
-    assetFileNames: "assets/[name][extname]"
+    assetFileNames: 'assets/[name][extname]',
   });
   const keys = Object.keys(output);
   t.is(keys.length, 1);
-  if (output[keys[0]].type)
-    t.is(output[keys[0]].type, 'asset');
-  else
-    t.true(output[keys[0]].isAsset);
+  if (output[keys[0]].type) t.is(output[keys[0]].type, 'asset');
+  else t.true(output[keys[0]].isAsset);
   t.is(output[keys[0]].fileName, 'out.wbn');
 
   t.snapshot(parseWebBundle(output[keys[0]].source));
@@ -118,17 +117,15 @@ test('static', async (t) => {
         baseURL: 'https://wbn.example.com/',
         primaryURL: 'https://wbn.example.com/',
         output: 'out.wbn',
-        static: { dir: 'fixtures/static' }
-      })
-    ]
+        static: { dir: 'fixtures/static' },
+      }),
+    ],
   });
   const { output } = await bundle.generate({ format: 'esm' });
   const keys = Object.keys(output);
   t.is(keys.length, 1);
-  if (output[keys[0]].type)
-    t.is(output[keys[0]].type, 'asset');
-  else
-    t.true(output[keys[0]].isAsset);
+  if (output[keys[0]].type) t.is(output[keys[0]].type, 'asset');
+  else t.true(output[keys[0]].isAsset);
   t.is(output[keys[0]].fileName, 'out.wbn');
 
   t.snapshot(parseWebBundle(output[keys[0]].source));
@@ -141,17 +138,15 @@ test('relative', async (t) => {
       webbundle({
         baseURL: '/',
         output: 'out.wbn',
-        static: { dir: 'fixtures/static' }
-      })
-    ]
+        static: { dir: 'fixtures/static' },
+      }),
+    ],
   });
   const { output } = await bundle.generate({ format: 'esm' });
   const keys = Object.keys(output);
   t.is(keys.length, 1);
-  if (output[keys[0]].type)
-    t.is(output[keys[0]].type, 'asset');
-  else
-    t.true(output[keys[0]].isAsset);
+  if (output[keys[0]].type) t.is(output[keys[0]].type, 'asset');
+  else t.true(output[keys[0]].isAsset);
   t.is(output[keys[0]].fileName, 'out.wbn');
 
   t.snapshot(parseWebBundle(output[keys[0]].source));
