@@ -4,7 +4,7 @@ A Rollup plugin which generates [Web Bundles](https://wicg.github.io/webpackage/
 
 ## Requirements
 
-This plugin requires Node v12.0.0+ and Rollup v1.21.0+.
+This plugin requires Node v14.0.0+ and Rollup v1.21.0+.
 
 ## Install
 
