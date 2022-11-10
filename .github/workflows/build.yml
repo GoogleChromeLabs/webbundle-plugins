@@ -4,7 +4,6 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -13,13 +12,24 @@ jobs:
         webpack-version: [4.0.x, ^4.0.0, 5.0.x, ^5.0.0]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - run: npm install webpack@${{ matrix.webpack-version }}
-    - run: npm run build --if-present
-    - run: npm test
-      env:
-        CI: true
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm install webpack@${{ matrix.webpack-version }}
+      - run: npm run build --if-present
+      - run: npm test
+        env:
+          CI: true
+
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: creyD/prettier_action@v4.2
+        with:
+          prettier_options: --write **/*.{js,ts}
+          only_changed: True
+          dry: True
+          prettier_version: 2.7.1

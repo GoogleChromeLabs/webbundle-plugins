@@ -32,24 +32,24 @@ function run(options) {
       bail: true,
       output: {
         path: '/out',
-        filename: 'main.js'
+        filename: 'main.js',
       },
-      plugins: [new WebBundlePlugin(options)]
+      plugins: [new WebBundlePlugin(options)],
     });
     const memfs = new MemoryFS();
     compiler.outputFileSystem = memfs;
     compiler.run((err, stats) => {
-      err ? reject(err) : resolve({stats, memfs});
+      err ? reject(err) : resolve({ stats, memfs });
     });
   });
 }
 
-test('basic', async t => {
+test('basic', async (t) => {
   const primaryURL = 'https://example.com/main.js';
   const { stats, memfs } = await run({
     baseURL: 'https://example.com/',
     primaryURL,
-    output: 'example.wbn'
+    output: 'example.wbn',
   });
   t.deepEqual(memfs.readdirSync('/out').sort(), ['example.wbn', 'main.js']);
   const js = memfs.readFileSync('/out/main.js');
@@ -60,30 +60,38 @@ test('basic', async t => {
   t.is(new TextDecoder('utf-8').decode(resp.body), js.toString());
 });
 
-test('static', async t => {
+test('static', async (t) => {
   const primaryURL = 'https://example.com/';
   const { stats, memfs } = await run({
     baseURL: 'https://example.com/',
     primaryURL,
     static: { dir: join(__dirname, 'fixtures', 'static') },
-    output: 'example.wbn'
+    output: 'example.wbn',
   });
   t.deepEqual(memfs.readdirSync('/out').sort(), ['example.wbn', 'main.js']);
-  const html = fs.readFileSync(join(__dirname, 'fixtures', 'static', 'index.html'));
+  const html = fs.readFileSync(
+    join(__dirname, 'fixtures', 'static', 'index.html')
+  );
   const bundle = new wbn.Bundle(memfs.readFileSync('/out/example.wbn'));
   t.is(bundle.primaryURL, primaryURL);
-  t.deepEqual(bundle.urls.sort(), [primaryURL, 'https://example.com/index.html', 'https://example.com/main.js']);
+  t.deepEqual(bundle.urls.sort(), [
+    primaryURL,
+    'https://example.com/index.html',
+    'https://example.com/main.js',
+  ]);
   const resp = bundle.getResponse(primaryURL);
   t.is(new TextDecoder('utf-8').decode(resp.body), html.toString());
 });
 
-test('relative', async t => {
+test('relative', async (t) => {
   const { stats, memfs } = await run({
     static: { dir: join(__dirname, 'fixtures', 'static') },
-    output: 'example.wbn'
+    output: 'example.wbn',
   });
   t.deepEqual(memfs.readdirSync('/out').sort(), ['example.wbn', 'main.js']);
-  const html = fs.readFileSync(join(__dirname, 'fixtures', 'static', 'index.html'));
+  const html = fs.readFileSync(
+    join(__dirname, 'fixtures', 'static', 'index.html')
+  );
   const js = memfs.readFileSync('/out/main.js');
   const bundle = new wbn.Bundle(memfs.readFileSync('/out/example.wbn'));
   t.deepEqual(bundle.urls.sort(), ['', 'index.html', 'main.js']);
