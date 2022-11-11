@@ -8,8 +8,8 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x, 14.x, 16.x]
-        rollup-version: [1.21.x, ^1.0.0, ^2.0.0]
+        node-version: [14.x, 16.x]
+        rollup-version: [1.21.x, ^1.0.0, ^2.0.0, ^3.0.0]
 
     steps:
       - uses: actions/checkout@v2
