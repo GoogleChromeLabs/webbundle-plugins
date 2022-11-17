@@ -19,6 +19,8 @@ import * as path from 'path';
 import * as rollup from 'rollup';
 import url from 'url';
 import * as wbn from 'wbn';
+import * as wbnSign from 'wbn-sign';
+
 import webbundle from '../lib/index.js';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -150,4 +152,37 @@ test('relative', async (t) => {
   t.is(output[keys[0]].fileName, 'out.wbn');
 
   t.snapshot(parseWebBundle(output[keys[0]].source));
+});
+
+test('integrityBlockSign', async (t) => {
+  const testPrivateKey =
+    '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----';
+  const fileName = 'out.wbn';
+
+  const bundle = await rollup.rollup({
+    input: 'fixtures/index.js',
+    plugins: [
+      webbundle({
+        baseURL: 'https://wbn.example.com/',
+        output: fileName,
+        integrityBlockSign: {
+          key: testPrivateKey,
+        },
+      }),
+    ],
+  });
+  const { output } = await bundle.generate({ format: 'esm' });
+  const keys = Object.keys(output);
+  t.is(keys.length, 1);
+  t.is(output[keys[0]].fileName, fileName);
+
+  const swbnFile = output[keys[0]].source;
+  const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
+  t.truthy(wbnLength < swbnFile.length);
+  const { signedWebBundle } = new wbnSign.IntegrityBlockSigner(
+    swbnFile.slice(-wbnLength),
+    { key: wbnSign.parsePemKey(testPrivateKey) }
+  ).sign();
+
+  t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
 });
