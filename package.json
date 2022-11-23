@@ -4,7 +4,8 @@
   "description": "Webpack plugin to generate WebBundle output.",
   "main": "index.js",
   "scripts": {
-    "test": "ava"
+    "test": "ava",
+    "lint": "npx prettier --write **/*.{js,md} --config ./package.json"
   },
   "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",
   "license": "Apache-2.0",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "ava": "^4.3.3",
     "memory-fs": "^0.5.0",
+    "prettier": "2.8.0",
     "webpack": "^5.74.0"
   },
   "engines": {
@@ -37,6 +39,7 @@
     "tabWidth": 2,
     "semi": true,
     "singleQuote": true,
-    "printWidth": 80
+    "printWidth": 80,
+    "proseWrap": "always"
   }
 }
