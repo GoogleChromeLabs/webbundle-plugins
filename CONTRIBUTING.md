@@ -24,5 +24,22 @@ information on using pull requests.
 
 ## Community Guidelines
 
-This project follows [Google's Open Source Community
-Guidelines](https://opensource.google/conduct/).
+This project follows
+[Google's Open Source Community Guidelines](https://opensource.google/conduct/).
+
+## Auto-formatting code
+
+The Github Actions workflow enforces linting code with Prettier according to the
+Prettier configs specified in the package.json.
+
+To lint your code locally before committing, one can run `npm run lint`.
+
+To enable running Prettier on save with VSCode, one can install the Prettier
+extension and then in VScode's settings have the following entries:
+
+```json
+"editor.formatOnSave": true,
+"[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+}
+```
