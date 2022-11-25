@@ -1,6 +1,6 @@
 {
   "name": "webbundle-webpack-plugin",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Webpack plugin to generate WebBundle output.",
   "main": "index.js",
   "scripts": {
