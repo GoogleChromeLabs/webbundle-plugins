@@ -18,6 +18,7 @@ const test = require('ava');
 const webpack = require('webpack');
 const MemoryFS = require('memory-fs');
 const wbn = require('wbn');
+const wbnSign = require('wbn-sign');
 const fs = require('fs');
 const { join } = require('path');
 
@@ -99,4 +100,32 @@ test('relative', async (t) => {
   t.is(new TextDecoder('utf-8').decode(resp.body), html.toString());
   resp = bundle.getResponse('main.js');
   t.is(new TextDecoder('utf-8').decode(resp.body), js.toString());
+});
+
+test('integrityBlockSign', async (t) => {
+  const testPrivateKey =
+    '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----';
+
+  const signed = await run({
+    baseURL: 'https://example.com/',
+    output: 'example.wbn',
+    integrityBlockSign: {
+      key: testPrivateKey,
+    },
+  });
+  t.deepEqual(signed.memfs.readdirSync('/out').sort(), [
+    'example.wbn',
+    'main.js',
+  ]);
+
+  const swbnFile = signed.memfs.readFileSync('/out/example.wbn');
+  const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
+  t.truthy(wbnLength < swbnFile.length);
+
+  const { signedWebBundle } = new wbnSign.IntegrityBlockSigner(
+    swbnFile.slice(-wbnLength),
+    { key: wbnSign.parsePemKey(testPrivateKey) }
+  ).sign();
+
+  t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
 });

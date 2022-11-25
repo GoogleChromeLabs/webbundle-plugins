@@ -18,8 +18,11 @@ const fs = require('fs');
 const path = require('path');
 const mime = require('mime');
 const { BundleBuilder } = require('wbn');
+const { IntegrityBlockSigner, WebBundleId, parsePemKey } = require('wbn-sign');
 const webpack = require('webpack');
 const { RawSource } = require('webpack-sources');
+
+const PLUGIN_NAME = 'webbundle-webpack-plugin';
 
 const defaults = {
   formatVersion: 'b2',
@@ -53,6 +56,20 @@ function addFilesRecursively(builder, baseURL, dir) {
       addFile(builder, baseURL + file, filePath);
     }
   }
+}
+
+function maybeSignWebBundle(webBundle, opts, infoLogger) {
+  if (!opts.integrityBlockSign) {
+    return webBundle;
+  }
+
+  const parsedPrivateKey = parsePemKey(opts.integrityBlockSign.key);
+  const { signedWebBundle } = new IntegrityBlockSigner(webBundle, {
+    key: parsedPrivateKey,
+  }).sign();
+
+  infoLogger(`${new WebBundleId(parsedPrivateKey)}`);
+  return signedWebBundle;
 }
 
 module.exports = class WebBundlePlugin {
@@ -96,7 +113,20 @@ module.exports = class WebBundlePlugin {
         builder.addExchange(opts.baseURL + key, 200, headers, buf);
       }
     }
-    compilation.assets[opts.output] = new RawSource(builder.createBundle());
+
+    // TODO: Logger is supported v4.37+. Remove once Webpack versions below that
+    // are no longer supported.
+    const infoLogger =
+      typeof compilation.getLogger === 'function'
+        ? (str) => compilation.getLogger(PLUGIN_NAME).info(str)
+        : (str) => console.log(str);
+
+    const webBundle = maybeSignWebBundle(
+      builder.createBundle(),
+      opts,
+      infoLogger
+    );
+    compilation.assets[opts.output] = new RawSource(webBundle);
   }
 
   apply(compiler) {
