@@ -163,7 +163,8 @@ test('integrityBlockSign', async (t) => {
     input: 'fixtures/index.js',
     plugins: [
       webbundle({
-        baseURL: 'https://wbn.example.com/',
+        baseURL:
+          'isolated-app://4tkrnsmftl4ggvvdkfth3piainqragus2qbhf7rlz2a3wo3rh4wqaaic/',
         output: fileName,
         integrityBlockSign: {
           key: testPrivateKey,
