@@ -101,10 +101,11 @@ should be written to `dist/signed.swbn`.
 
 ### `baseURL`
 
-Type: `string`
+Type: `string  `
+Default: `''`
 
-Specifies the URL prefix prepended to the file names in the bundle. This must be
-an absolute URL that ends with `/`.
+Specifies the URL prefix prepended to the file names in the bundle. Non-empty
+baseURL must end with `/`.
 
 ### `primaryURL`
 

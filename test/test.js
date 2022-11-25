@@ -106,20 +106,19 @@ test('integrityBlockSign', async (t) => {
   const testPrivateKey =
     '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----';
 
-  const signed = await run({
-    baseURL:
-      'isolated-app://4tkrnsmftl4ggvvdkfth3piainqragus2qbhf7rlz2a3wo3rh4wqaaic/',
-    output: 'example.wbn',
-    integrityBlockSign: {
-      key: testPrivateKey,
-    },
-  });
-  t.deepEqual(signed.memfs.readdirSync('/out').sort(), [
-    'example.wbn',
-    'main.js',
-  ]);
+  const signed = (
+    await run({
+      baseURL:
+        'isolated-app://4tkrnsmftl4ggvvdkfth3piainqragus2qbhf7rlz2a3wo3rh4wqaaic/',
+      output: 'example.wbn',
+      integrityBlockSign: {
+        key: testPrivateKey,
+      },
+    })
+  ).memfs;
+  t.deepEqual(signed.readdirSync('/out').sort(), ['example.wbn', 'main.js']);
 
-  const swbnFile = signed.memfs.readFileSync('/out/example.wbn');
+  const swbnFile = signed.readFileSync('/out/example.wbn');
   const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
   t.truthy(wbnLength < swbnFile.length);
 
