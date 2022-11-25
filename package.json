@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "mime": "^2.4.4",
-    "wbn": "0.0.8"
+    "wbn": "0.0.8",
+    "wbn-sign": "0.0.1"
   },
   "devDependencies": {
     "ava": "^4.3.1",
