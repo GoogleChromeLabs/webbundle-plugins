@@ -107,7 +107,8 @@ test('integrityBlockSign', async (t) => {
     '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----';
 
   const signed = await run({
-    baseURL: 'https://example.com/',
+    baseURL:
+      'isolated-app://4tkrnsmftl4ggvvdkfth3piainqragus2qbhf7rlz2a3wo3rh4wqaaic/',
     output: 'example.wbn',
     integrityBlockSign: {
       key: testPrivateKey,
