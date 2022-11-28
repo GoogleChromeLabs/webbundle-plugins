@@ -27,6 +27,7 @@ const PLUGIN_NAME = 'webbundle-webpack-plugin';
 const defaults = {
   formatVersion: 'b2',
   output: 'out.wbn',
+  baseURL: '',
 };
 
 function addFile(builder, url, file) {
@@ -99,7 +100,7 @@ function validateOptions(opts) {
 
 module.exports = class WebBundlePlugin {
   constructor(opts) {
-    this.opts = Object.assign({}, defaults, { baseURL: '' }, opts);
+    this.opts = Object.assign({}, defaults, opts);
     validateOptions(this.opts);
   }
 
