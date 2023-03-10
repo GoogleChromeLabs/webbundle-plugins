@@ -18,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const mime = require('mime');
 const { BundleBuilder } = require('wbn');
-const { IntegrityBlockSigner, WebBundleId, parsePemKey } = require('wbn-sign');
+const { IntegrityBlockSigner, WebBundleId } = require('wbn-sign');
 const webpack = require('webpack');
 const { RawSource } = require('webpack-sources');
 
@@ -64,12 +64,11 @@ function maybeSignWebBundle(webBundle, opts, infoLogger) {
     return webBundle;
   }
 
-  const parsedPrivateKey = parsePemKey(opts.integrityBlockSign.key);
   const { signedWebBundle } = new IntegrityBlockSigner(webBundle, {
-    key: parsedPrivateKey,
+    key: opts.integrityBlockSign.key,
   }).sign();
 
-  infoLogger(`${new WebBundleId(parsedPrivateKey)}`);
+  infoLogger(`${new WebBundleId(opts.integrityBlockSign.key)}`);
   return signedWebBundle;
 }
 
@@ -80,7 +79,7 @@ function validateIWAOptions(opts) {
 
   if (opts.baseURL !== '') {
     const expectedOrigin = new WebBundleId(
-      parsePemKey(opts.integrityBlockSign.key)
+      opts.integrityBlockSign.key
     ).serializeWithIsolatedWebAppOrigin();
 
     if (opts.baseURL !== expectedOrigin) {

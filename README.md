@@ -72,24 +72,24 @@ const WebBundlePlugin = require('webbundle-webpack-plugin');
 const { WebBundleId, parsePemKey } = require('wbn-sign');
 require('dotenv').config({ path: './.env' });
 
-module.exports = {
-  entry: './src/index.js',
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'app.js',
-  },
-  plugins: [
-    new WebBundlePlugin({
-      baseURL: new WebBundleId(
-        parsePemKey(process.env.ED25519KEY)
-      ).serializeWithIsolatedWebAppOrigin(),
-      static: { dir: path.resolve(__dirname, 'static') },
-      output: 'signed.wbn',
-      integrityBlockSign: {
-        key: process.env.ED25519KEY,
-      },
-    }),
-  ],
+module.exports = () => {
+  const key = parsePemKey(process.env.ED25519KEY);
+
+  return {
+    entry: './src/index.js',
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      filename: 'app.js',
+    },
+    plugins: [
+      new WebBundlePlugin({
+        baseURL: new WebBundleId(key).serializeWithIsolatedWebAppOrigin(),
+        static: { dir: path.resolve(__dirname, 'static') },
+        output: 'signed.wbn',
+        integrityBlockSign: { key },
+      }),
+    ],
+  };
 };
 ```
 
@@ -101,7 +101,7 @@ should be written to `dist/signed.swbn`.
 
 ### `baseURL`
 
-Type: `string  `
+Type: `string `  
 Default: `''`
 
 Specifies the URL prefix prepended to the file names in the bundle. Non-empty
@@ -143,20 +143,23 @@ Specifies WebBundle format version.
 
 ### `integrityBlockSign`
 
-Type: `{ key: string }`
+Type: `{ key: KeyObject }`
 
 Object specifying the signing options with
 [Integrity Block](https://github.com/WICG/webpackage/blob/main/explainers/integrity-signature.md).
 
 ### `integrityBlockSign.key` (required if `integrityBlockSign` is in place)
 
-Type: `string`
+Type: `KeyObject`
 
-A PEM-encoded Ed25519 private key as a string, which can be generated with:
+A parsed Ed25519 private key, which can be generated with:
 
 ```bash
 openssl genpkey -algorithm Ed25519 -out ed25519key.pem
 ```
+
+And parsed with `parsePemKey(process.env.ED25519KEY)` an imported helper
+function from `wbn-sign` npm package.
 
 Note than in order for it to be parsed correctly, it must contain the `BEGIN`
 and `END` texts and line breaks (`\n`). Below an example `.env` file:
@@ -178,6 +181,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) file.
 This is not an officially supported Google product.
 
 ## Release Notes
+
+### v0.1.0
+
+- BREAKING CHANGE: Change type of integrityBlockSign.key to be KeyObject instead of string.
 
 ### v0.0.4
 
