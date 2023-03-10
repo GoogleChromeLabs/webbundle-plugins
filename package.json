@@ -15,7 +15,7 @@
     "url": "https://github.com/GoogleChromeLabs/rollup-plugin-webbundle.git"
   },
   "peerDependencies": {
-    "rollup": ">=1.21.0 <3.0.0"
+    "rollup": ">=1.21.0 <4.0.0"
   },
   "dependencies": {
     "mime": "^2.4.4",
