@@ -70,6 +70,8 @@ import * as wbnSign from 'wbn-sign';
 import dotenv from 'dotenv';
 dotenv.config({ path: './.env' });
 
+const key = wbnSign.parsePemKey(process.env.ED25519KEY);
+
 export default {
   input: 'src/index.js',
   output: {
@@ -78,14 +80,10 @@ export default {
   },
   plugins: [
     webbundle({
-      baseURL: new wbnSign.WebBundleId(
-        wbnSign.parsePemKey(process.env.ED25519KEY)
-      ).serializeWithIsolatedWebAppOrigin(),
+      baseURL: new wbnSign.WebBundleId(key).serializeWithIsolatedWebAppOrigin(),
       static: { dir: 'public' },
       output: 'signed.swbn',
-      integrityBlockSign: {
-        key: process.env.ED25519KEY,
-      },
+      integrityBlockSign: { key },
     }),
   ],
 };
@@ -136,20 +134,22 @@ Specifies the file name of the Web Bundle to emit.
 
 ### `integrityBlockSign`
 
-Type: `{ key: string }`
+Type: `{ key: KeyObject }`
 
 Object specifying the signing options with
 [Integrity Block](https://github.com/WICG/webpackage/blob/main/explainers/integrity-signature.md).
 
 ### `integrityBlockSign.key` (required if `integrityBlockSign` is in place)
 
-Type: `string`
+Type: `KeyObject`
 
-A PEM-encoded Ed25519 private key as a string, which can be generated with:
+A parsed Ed25519 private key, which can be generated with:
 
 ```bash
 openssl genpkey -algorithm Ed25519 -out ed25519key.pem
 ```
+
+And parsed with `wbnSign.parsePemKey(process.env.ED25519KEY)` helper function.
 
 Note than in order for it to be parsed correctly, it must contain the `BEGIN`
 and `END` texts and line breaks (`\n`). Below an example `.env` file:
@@ -171,6 +171,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) file.
 This is not an officially supported Google product.
 
 ## Release Notes
+
+### v0.1.0
+
+- BREAKING CHANGE: Change type of integrityBlockSign.key to be KeyObject instead of string.
+- Upgrade to support Rollup 3.
 
 ### v0.0.4
 

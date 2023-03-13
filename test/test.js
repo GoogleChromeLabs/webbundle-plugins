@@ -155,8 +155,9 @@ test('relative', async (t) => {
 });
 
 test('integrityBlockSign', async (t) => {
-  const testPrivateKey =
-    '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----';
+  const testPrivateKey = wbnSign.parsePemKey(
+    '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'
+  );
   const fileName = 'out.wbn';
 
   const bundle = await rollup.rollup({
@@ -182,7 +183,7 @@ test('integrityBlockSign', async (t) => {
   t.truthy(wbnLength < swbnFile.length);
   const { signedWebBundle } = new wbnSign.IntegrityBlockSigner(
     swbnFile.slice(-wbnLength),
-    { key: wbnSign.parsePemKey(testPrivateKey) }
+    { key: testPrivateKey }
   ).sign();
 
   t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
