@@ -17,7 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime');
-const { BundleBuilder } = require('wbn');
+const { BundleBuilder, combineHeadersForUrl } = require('wbn');
 const { IntegrityBlockSigner, WebBundleId } = require('wbn-sign');
 const webpack = require('webpack');
 const { RawSource } = require('webpack-sources');
@@ -30,14 +30,20 @@ const defaults = {
   baseURL: '',
 };
 
-function addFile(builder, url, file) {
+function addFile(builder, url, file, overrideHeadersOption) {
   const headers = {
     'Content-Type': mime.getType(file) || 'application/octet-stream',
   };
-  builder.addExchange(url, 200, headers, fs.readFileSync(file));
+
+  builder.addExchange(
+    url,
+    200,
+    combineHeadersForUrl(headers, overrideHeadersOption, url),
+    fs.readFileSync(file)
+  );
 }
 
-function addFilesRecursively(builder, baseURL, dir) {
+function addFilesRecursively(builder, baseURL, dir, overrideHeadersOption) {
   if (baseURL !== '' && !baseURL.endsWith('/')) {
     throw new Error("Non-empty baseURL must end with '/'.");
   }
@@ -46,15 +52,29 @@ function addFilesRecursively(builder, baseURL, dir) {
   for (const file of files) {
     const filePath = path.join(dir, file);
     if (fs.statSync(filePath).isDirectory()) {
-      addFilesRecursively(builder, baseURL + file + '/', filePath);
+      addFilesRecursively(
+        builder,
+        baseURL + file + '/',
+        filePath,
+        overrideHeadersOption
+      );
     } else if (file === 'index.html') {
       // If the file name is 'index.html', create an entry for baseURL itself
       // and another entry for baseURL/index.html which redirects to baseURL.
       // This matches the behavior of gen-bundle.
-      addFile(builder, baseURL, filePath);
-      builder.addExchange(baseURL + file, 301, { Location: './' }, '');
+      addFile(builder, baseURL, filePath, overrideHeadersOption);
+      builder.addExchange(
+        baseURL + file,
+        301,
+        combineHeadersForUrl(
+          { Location: './' },
+          overrideHeadersOption,
+          baseURL + file
+        ),
+        ''
+      );
     } else {
-      addFile(builder, baseURL + file, filePath);
+      addFile(builder, baseURL + file, filePath, overrideHeadersOption);
     }
   }
 }
@@ -113,7 +133,8 @@ module.exports = class WebBundlePlugin {
       addFilesRecursively(
         builder,
         opts.static.baseURL || opts.baseURL,
-        opts.static.dir
+        opts.static.dir,
+        opts.headerOverride
       );
     }
 
@@ -130,10 +151,37 @@ module.exports = class WebBundlePlugin {
         // If the file name is 'index.html', create an entry for baseURL/dir/
         // and another entry for baseURL/dir/index.html which redirects to it.
         // This matches the behavior of gen-bundle.
-        builder.addExchange(opts.baseURL + filePath.dir, 200, headers, buf);
-        builder.addExchange(opts.baseURL + key, 301, { Location: './' }, '');
+        builder.addExchange(
+          opts.baseURL + filePath.dir,
+          200,
+          combineHeadersForUrl(
+            headers,
+            opts.headerOverride,
+            opts.baseURL + filePath.dir
+          ),
+          buf
+        );
+        builder.addExchange(
+          opts.baseURL + key,
+          301,
+          combineHeadersForUrl(
+            { Location: './' },
+            opts.headerOverride,
+            opts.baseURL + key
+          ),
+          ''
+        );
       } else {
-        builder.addExchange(opts.baseURL + key, 200, headers, buf);
+        builder.addExchange(
+          opts.baseURL + key,
+          200,
+          combineHeadersForUrl(
+            headers,
+            opts.headerOverride,
+            opts.baseURL + key
+          ),
+          buf
+        );
       }
     }
 
