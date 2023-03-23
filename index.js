@@ -17,7 +17,6 @@
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime');
-// TODO(sonkkeli): Update the package version to 0.9.0 before landing this.
 const { BundleBuilder, combineHeadersForUrl } = require('wbn');
 const { IntegrityBlockSigner, WebBundleId } = require('wbn-sign');
 const webpack = require('webpack');

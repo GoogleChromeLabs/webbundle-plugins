@@ -182,6 +182,10 @@ This is not an officially supported Google product.
 
 ## Release Notes
 
+### v0.1.1
+
+- Add support for overriding headers.
+
 ### v0.1.0
 
 - BREAKING CHANGE: Change type of integrityBlockSign.key to be KeyObject instead of string.
