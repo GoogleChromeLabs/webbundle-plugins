@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-webbundle",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Rollup plugin to generate WebBundle output.",
   "main": "lib/index.js",
   "type": "module",
