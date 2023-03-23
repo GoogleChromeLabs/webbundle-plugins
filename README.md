@@ -168,6 +168,12 @@ and `END` texts and line breaks (`\n`). Below an example `.env` file:
 ED25519KEY="-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----"
 ```
 
+### `headerOverride`
+
+Type: `{ [key: string]: string; }` | `(filepath: string) => { [key: string]: string; };`   
+
+Object of strings specifying overridden headers or a function returning the same kind of object.
+
 ## License
 
 Licensed under the Apache-2.0 license.
