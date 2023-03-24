@@ -138,48 +138,50 @@ module.exports = class WebBundlePlugin {
       );
     }
 
-    for (const key of Object.keys(compilation.assets)) {
+    for (const assetName of Object.keys(compilation.assets)) {
       const headers = {
         'Content-Type': mime.getType(key) || 'application/octet-stream',
       };
-      const source = compilation.assets[key].source();
-      const buf = Buffer.isBuffer(source) ? source : Buffer.from(source);
+      const assetRawSource = compilation.assets[assetName].source();
+      const assetBuffer = Buffer.isBuffer(assetRawSource)
+        ? assetRawSource
+        : Buffer.from(assetRawSource);
 
-      const filePath = path.parse(key);
-      if (filePath.base === 'index.html') {
+      const assetFilePath = path.parse(assetName);
+      if (assetFilePath.base === 'index.html') {
         // If the file name is 'index.html', create an entry for baseURL/dir/
         // and another entry for baseURL/dir/index.html which redirects to it.
         // This matches the behavior of gen-bundle.
         builder.addExchange(
-          opts.baseURL + filePath.dir,
+          opts.baseURL + assetFilePath.dir,
           200,
           combineHeadersForUrl(
             headers,
             opts.headerOverride,
-            opts.baseURL + filePath.dir
+            opts.baseURL + assetFilePath.dir
           ),
-          buf
+          assetBuffer
         );
         builder.addExchange(
-          opts.baseURL + key,
+          opts.baseURL + assetName,
           301,
           combineHeadersForUrl(
             { Location: './' },
             opts.headerOverride,
-            opts.baseURL + key
+            opts.baseURL + assetName
           ),
           ''
         );
       } else {
         builder.addExchange(
-          opts.baseURL + key,
+          opts.baseURL + assetName,
           200,
           combineHeadersForUrl(
             headers,
             opts.headerOverride,
-            opts.baseURL + key
+            opts.baseURL + assetName
           ),
-          buf
+          assetBuffer
         );
       }
     }
