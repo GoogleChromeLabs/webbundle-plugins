@@ -30,17 +30,55 @@ const defaults = {
   baseURL: '',
 };
 
-function addFile(builder, url, file, overrideHeadersOption) {
+function addAsset(
+  builder,
+  baseURL,
+  assetFullName, // Directory(optional) + assetShortName. Depending if called recursively or not.
+  assetShortName,
+  assetRelativeDirToBaseURL,
+  assetContentBuffer,
+  overrideHeadersOption
+) {
   const headers = {
-    'Content-Type': mime.getType(file) || 'application/octet-stream',
+    'Content-Type': mime.getType(assetFullName) || 'application/octet-stream',
   };
 
-  builder.addExchange(
-    url,
-    200,
-    combineHeadersForUrl(headers, overrideHeadersOption, url),
-    fs.readFileSync(file)
-  );
+  if (assetShortName === 'index.html') {
+    // If the file name is 'index.html', create an entry for both baseURL/dir/
+    // and baseURL/dir/index.html which redirects to the aforementioned.
+    // This matches the behavior of gen-bundle.
+    builder.addExchange(
+      baseURL + assetRelativeDirToBaseURL,
+      200,
+      combineHeadersForUrl(
+        headers,
+        overrideHeadersOption,
+        baseURL + assetRelativeDirToBaseURL
+      ),
+      assetContentBuffer
+    );
+    builder.addExchange(
+      baseURL + assetFullName,
+      301,
+      combineHeadersForUrl(
+        { Location: './' },
+        overrideHeadersOption,
+        baseURL + assetFullName
+      ),
+      '' // Empty content.
+    );
+  } else {
+    builder.addExchange(
+      baseURL + assetFullName,
+      200,
+      combineHeadersForUrl(
+        headers,
+        overrideHeadersOption,
+        baseURL + assetFullName
+      ),
+      assetContentBuffer
+    );
+  }
 }
 
 function addFilesRecursively(builder, baseURL, dir, overrideHeadersOption) {
@@ -49,32 +87,29 @@ function addFilesRecursively(builder, baseURL, dir, overrideHeadersOption) {
   }
   const files = fs.readdirSync(dir);
   files.sort(); // Sort entries for reproducibility.
-  for (const file of files) {
-    const filePath = path.join(dir, file);
+
+  for (const fileName of files) {
+    const filePath = path.join(dir, fileName);
     if (fs.statSync(filePath).isDirectory()) {
       addFilesRecursively(
         builder,
-        baseURL + file + '/',
+        baseURL + fileName + '/',
         filePath,
         overrideHeadersOption
       );
-    } else if (file === 'index.html') {
-      // If the file name is 'index.html', create an entry for baseURL itself
-      // and another entry for baseURL/index.html which redirects to baseURL.
-      // This matches the behavior of gen-bundle.
-      addFile(builder, baseURL, filePath, overrideHeadersOption);
-      builder.addExchange(
-        baseURL + file,
-        301,
-        combineHeadersForUrl(
-          { Location: './' },
-          overrideHeadersOption,
-          baseURL + file
-        ),
-        ''
-      );
     } else {
-      addFile(builder, baseURL + file, filePath, overrideHeadersOption);
+      const fileContent = fs.readFileSync(filePath);
+      // `fileName` contains the directory as this is done recursively for every
+      // directory so it gets added to the baseURL.
+      addAsset(
+        builder,
+        baseURL,
+        fileName,
+        fileName,
+        '',
+        fileContent,
+        overrideHeadersOption
+      );
     }
   }
 }
@@ -139,51 +174,21 @@ module.exports = class WebBundlePlugin {
     }
 
     for (const assetName of Object.keys(compilation.assets)) {
-      const headers = {
-        'Content-Type': mime.getType(key) || 'application/octet-stream',
-      };
       const assetRawSource = compilation.assets[assetName].source();
       const assetBuffer = Buffer.isBuffer(assetRawSource)
         ? assetRawSource
         : Buffer.from(assetRawSource);
 
       const assetFilePath = path.parse(assetName);
-      if (assetFilePath.base === 'index.html') {
-        // If the file name is 'index.html', create an entry for baseURL/dir/
-        // and another entry for baseURL/dir/index.html which redirects to it.
-        // This matches the behavior of gen-bundle.
-        builder.addExchange(
-          opts.baseURL + assetFilePath.dir,
-          200,
-          combineHeadersForUrl(
-            headers,
-            opts.headerOverride,
-            opts.baseURL + assetFilePath.dir
-          ),
-          assetBuffer
-        );
-        builder.addExchange(
-          opts.baseURL + assetName,
-          301,
-          combineHeadersForUrl(
-            { Location: './' },
-            opts.headerOverride,
-            opts.baseURL + assetName
-          ),
-          ''
-        );
-      } else {
-        builder.addExchange(
-          opts.baseURL + assetName,
-          200,
-          combineHeadersForUrl(
-            headers,
-            opts.headerOverride,
-            opts.baseURL + assetName
-          ),
-          assetBuffer
-        );
-      }
+      addAsset(
+        builder,
+        opts.baseURL,
+        assetName, // This contains the relative path to the base directory.
+        assetFilePath.base,
+        assetFilePath.dir,
+        assetBuffer,
+        opts.headerOverride
+      );
     }
 
     // TODO: Logger is supported v4.37+. Remove once Webpack versions below that
