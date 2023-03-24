@@ -141,7 +141,6 @@ module.exports = class WebBundlePlugin {
     for (const key of Object.keys(compilation.assets)) {
       const headers = {
         'Content-Type': mime.getType(key) || 'application/octet-stream',
-        'Access-Control-Allow-Origin': '*',
       };
       const source = compilation.assets[key].source();
       const buf = Buffer.isBuffer(source) ? source : Buffer.from(source);
