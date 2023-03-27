@@ -160,9 +160,11 @@ ED25519KEY="-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh
 
 ### `headerOverride`
 
-Type: `{ [key: string]: string; }` | `(filepath: string) => { [key: string]: string; };`   
+Type: `{ [key: string]: string; }` |
+`(filepath: string) => { [key: string]: string; };`
 
-Object of strings specifying overridden headers or a function returning the same kind of object.
+Object of strings specifying overridden headers or a function returning the same
+kind of object.
 
 ## License
 
@@ -184,7 +186,8 @@ This is not an officially supported Google product.
 
 ### v0.1.0
 
-- BREAKING CHANGE: Change type of integrityBlockSign.key to be KeyObject instead of string.
+- BREAKING CHANGE: Change type of integrityBlockSign.key to be KeyObject instead
+  of string.
 - Upgrade to support Rollup 3.
 
 ### v0.0.4
