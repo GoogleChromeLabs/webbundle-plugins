@@ -33,55 +33,61 @@ const defaults = {
 function addAsset(
   builder,
   baseURL,
-  assetFullName, // Directory(optional) + assetShortName. Depending if called recursively or not.
-  assetShortName,
-  assetRelativeDirToBaseURL,
+  relativeAssetPath, // Asset's path relative to app's base dir. E.g. sub-dir/helloworld.js
   assetContentBuffer,
   overrideHeadersOption
 ) {
+  const parsedAssetPath = path.parse(relativeAssetPath);
   const headers = {
-    'Content-Type': mime.getType(assetFullName) || 'application/octet-stream',
+    'Content-Type':
+      mime.getType(relativeAssetPath) || 'application/octet-stream',
   };
 
-  if (assetShortName === 'index.html') {
+  if (parsedAssetPath.base === 'index.html') {
     // If the file name is 'index.html', create an entry for both baseURL/dir/
     // and baseURL/dir/index.html which redirects to the aforementioned.
     // This matches the behavior of gen-bundle.
     builder.addExchange(
-      baseURL + assetRelativeDirToBaseURL,
+      baseURL + parsedAssetPath.dir,
       200,
       combineHeadersForUrl(
         headers,
         overrideHeadersOption,
-        baseURL + assetRelativeDirToBaseURL
+        baseURL + parsedAssetPath.dir
       ),
       assetContentBuffer
     );
     builder.addExchange(
-      baseURL + assetFullName,
+      baseURL + relativeAssetPath,
       301,
       combineHeadersForUrl(
         { Location: './' },
         overrideHeadersOption,
-        baseURL + assetFullName
+        baseURL + relativeAssetPath
       ),
       '' // Empty content.
     );
   } else {
     builder.addExchange(
-      baseURL + assetFullName,
+      baseURL + relativeAssetPath,
       200,
       combineHeadersForUrl(
         headers,
         overrideHeadersOption,
-        baseURL + assetFullName
+        baseURL + relativeAssetPath
       ),
       assetContentBuffer
     );
   }
 }
 
-function addFilesRecursively(builder, baseURL, dir, overrideHeadersOption) {
+function addFilesRecursively(
+  builder,
+  baseURL,
+  dir,
+  overrideHeadersOption,
+  recPath = ''
+) {
   if (baseURL !== '' && !baseURL.endsWith('/')) {
     throw new Error("Non-empty baseURL must end with '/'.");
   }
@@ -90,12 +96,14 @@ function addFilesRecursively(builder, baseURL, dir, overrideHeadersOption) {
 
   for (const fileName of files) {
     const filePath = path.join(dir, fileName);
+
     if (fs.statSync(filePath).isDirectory()) {
       addFilesRecursively(
         builder,
-        baseURL + fileName + '/',
+        baseURL,
         filePath,
-        overrideHeadersOption
+        overrideHeadersOption,
+        recPath + fileName + '/'
       );
     } else {
       const fileContent = fs.readFileSync(filePath);
@@ -104,9 +112,7 @@ function addFilesRecursively(builder, baseURL, dir, overrideHeadersOption) {
       addAsset(
         builder,
         baseURL,
-        fileName,
-        fileName,
-        '',
+        recPath + fileName,
         fileContent,
         overrideHeadersOption
       );
@@ -179,13 +185,10 @@ module.exports = class WebBundlePlugin {
         ? assetRawSource
         : Buffer.from(assetRawSource);
 
-      const assetFilePath = path.parse(assetName);
       addAsset(
         builder,
         opts.baseURL,
-        assetName, // This contains the relative path to the base directory.
-        assetFilePath.base,
-        assetFilePath.dir,
+        assetName, // This contains the relative path to the base dir already.
         assetBuffer,
         opts.headerOverride
       );
