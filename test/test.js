@@ -23,6 +23,19 @@ const fs = require('fs');
 const { join } = require('path');
 
 const WebBundlePlugin = require('..');
+const {
+  coep,
+  coop,
+  corp,
+  csp,
+  iwaHeaderDefaults,
+} = require('../iwa-header-constants');
+
+const TEST_ED25519_PRIVATE_KEY = wbnSign.parsePemKey(
+  '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'
+);
+const TEST_IWA_BASE_URL =
+  'isolated-app://4tkrnsmftl4ggvvdkfth3piainqragus2qbhf7rlz2a3wo3rh4wqaaic/';
 
 function run(options) {
   return new Promise((resolve, reject) => {
@@ -103,30 +116,92 @@ test('relative', async (t) => {
 });
 
 test('integrityBlockSign', async (t) => {
-  const testPrivateKey = wbnSign.parsePemKey(
-    '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'
-  );
-
   const signed = (
     await run({
-      baseURL:
-        'isolated-app://4tkrnsmftl4ggvvdkfth3piainqragus2qbhf7rlz2a3wo3rh4wqaaic/',
-      output: 'example.wbn',
+      baseURL: TEST_IWA_BASE_URL,
+      output: 'example.swbn',
       integrityBlockSign: {
-        key: testPrivateKey,
+        key: TEST_ED25519_PRIVATE_KEY,
       },
     })
   ).memfs;
-  t.deepEqual(signed.readdirSync('/out').sort(), ['example.wbn', 'main.js']);
+  t.deepEqual(signed.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
 
-  const swbnFile = signed.readFileSync('/out/example.wbn');
+  const swbnFile = signed.readFileSync('/out/example.swbn');
   const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
   t.truthy(wbnLength < swbnFile.length);
 
   const { signedWebBundle } = new wbnSign.IntegrityBlockSigner(
     swbnFile.slice(-wbnLength),
-    { key: testPrivateKey }
+    { key: TEST_ED25519_PRIVATE_KEY }
   ).sign();
-
   t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
+});
+
+test('headerOverride - IWA with good headers', async (t) => {
+  const goodHeadersTestCases = [
+    iwaHeaderDefaults,
+    () => iwaHeaderDefaults,
+    // When `integrityBlockSign.isIwa` and `headerOverride` are undefined,
+    // `iwaHeaderDefaults` will be added to each resource.
+    undefined,
+  ];
+
+  for (const testCase of goodHeadersTestCases) {
+    const signed = (
+      await run({
+        baseURL: TEST_IWA_BASE_URL,
+        output: 'example.swbn',
+        integrityBlockSign: {
+          key: TEST_ED25519_PRIVATE_KEY,
+          isIwa: undefined, // Could also be empty, but highlighting it like this.
+        },
+        headerOverride: testCase,
+      })
+    ).memfs;
+    t.deepEqual(signed.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
+
+    const swbnFile = signed.readFileSync('/out/example.swbn');
+    const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
+    t.truthy(wbnLength < swbnFile.length);
+
+    const usignedBundle = new wbn.Bundle(swbnFile.slice(-wbnLength));
+    for (const url of usignedBundle.urls) {
+      for (const headerName of Object.keys(iwaHeaderDefaults)) {
+        t.is(
+          usignedBundle.getResponse(url).headers[headerName],
+          iwaHeaderDefaults[headerName]
+        );
+      }
+    }
+  }
+});
+
+test('headerOverride - IWA with bad headers', async (t) => {
+  const badHeadersTestCases = [];
+  for (const badHeaders of [
+    { ...coop, ...corp, ...csp },
+    { ...coep, ...corp, ...csp },
+    { ...coep, ...coop, ...csp },
+    { ...coep, ...coop, ...corp },
+  ]) {
+    badHeadersTestCases.push(badHeaders);
+    badHeadersTestCases.push(() => badHeaders);
+  }
+
+  for (const badHeaders of badHeadersTestCases) {
+    await t.throwsAsync(
+      async () => {
+        await run({
+          baseURL: TEST_IWA_BASE_URL,
+          output: 'example.swbn',
+          integrityBlockSign: {
+            key: TEST_ED25519_PRIVATE_KEY,
+          },
+          headerOverride: badHeaders,
+        });
+      },
+      { instanceOf: Error }
+    );
+  }
 });

@@ -21,6 +21,11 @@ const { BundleBuilder, combineHeadersForUrl } = require('wbn');
 const { IntegrityBlockSigner, WebBundleId } = require('wbn-sign');
 const webpack = require('webpack');
 const { RawSource } = require('webpack-sources');
+const {
+  iwaHeaderDefaults,
+  invariableIwaHeaders,
+  csp,
+} = require('./iwa-header-constants');
 
 const PLUGIN_NAME = 'webbundle-webpack-plugin';
 
@@ -32,42 +37,55 @@ const defaults = {
 
 // If the file name is 'index.html', create an entry for both baseURL/dir/
 // and baseURL/dir/index.html which redirects to the aforementioned. Otherwise
-// just for the asset itself. This matches the behavior of gen-bundle.
+// just for the file itself. This matches the behavior of gen-bundle.
 function addAsset(
   builder,
   baseURL,
   relativeAssetPath, // Asset's path relative to app's base dir. E.g. sub-dir/helloworld.js
   assetContentBuffer,
-  overrideHeadersOption
+  pluginOptions
 ) {
   const parsedAssetPath = path.parse(relativeAssetPath);
-  const headers = {
-    'Content-Type':
-      mime.getType(relativeAssetPath) || 'application/octet-stream',
-  };
   const isIndexHtmlFile = parsedAssetPath.base === 'index.html';
 
+  // For object type, the IWA headers have already been check in constructor.
+  const shouldCheckIwaHeaders =
+    typeof pluginOptions.headerOverride === 'function' &&
+    pluginOptions.integrityBlockSign &&
+    pluginOptions.integrityBlockSign.isIwa;
+
   if (isIndexHtmlFile) {
+    const combinedIndexHeaders = combineHeadersForUrl(
+      { Location: './' },
+      pluginOptions.headerOverride,
+      baseURL + relativeAssetPath
+    );
+    if (shouldCheckIwaHeaders) checkIwaOverrideHeaders(combinedIndexHeaders);
+
     builder.addExchange(
       baseURL + relativeAssetPath,
       301,
-      combineHeadersForUrl(
-        { Location: './' },
-        overrideHeadersOption,
-        baseURL + relativeAssetPath
-      ),
+      combinedIndexHeaders,
       '' // Empty content.
     );
   }
 
-  const baseURLWithAssetPath = isIndexHtmlFile
-    ? baseURL + parsedAssetPath.dir
-    : baseURL + relativeAssetPath;
+  const baseURLWithAssetPath =
+    baseURL + (isIndexHtmlFile ? parsedAssetPath.dir : relativeAssetPath);
+  const combinedHeaders = combineHeadersForUrl(
+    {
+      'Content-Type':
+        mime.getType(relativeAssetPath) || 'application/octet-stream',
+    },
+    pluginOptions.headerOverride,
+    baseURLWithAssetPath
+  );
+  if (shouldCheckIwaHeaders) checkIwaOverrideHeaders(combinedHeaders);
 
   builder.addExchange(
     baseURLWithAssetPath,
     200,
-    combineHeadersForUrl(headers, overrideHeadersOption, baseURLWithAssetPath),
+    combinedHeaders,
     assetContentBuffer
   );
 }
@@ -76,7 +94,7 @@ function addFilesRecursively(
   builder,
   baseURL,
   dir,
-  overrideHeadersOption,
+  pluginOptions,
   recPath = ''
 ) {
   if (baseURL !== '' && !baseURL.endsWith('/')) {
@@ -93,7 +111,7 @@ function addFilesRecursively(
         builder,
         baseURL,
         filePath,
-        overrideHeadersOption,
+        pluginOptions,
         recPath + fileName + '/'
       );
     } else {
@@ -105,7 +123,7 @@ function addFilesRecursively(
         baseURL,
         recPath + fileName,
         fileContent,
-        overrideHeadersOption
+        pluginOptions
       );
     }
   }
@@ -124,7 +142,51 @@ function maybeSignWebBundle(webBundle, opts, infoLogger) {
   return signedWebBundle;
 }
 
-function validateIWAOptions(opts) {
+function checkIwaOverrideHeaders(headers) {
+  for (const iwaHeaderName of Object.keys(invariableIwaHeaders)) {
+    if (headers[iwaHeaderName] !== invariableIwaHeaders[iwaHeaderName]) {
+      throw new Error(
+        `For Isolated Web Apps ${iwaHeaderName} should be ${invariableIwaHeaders[iwaHeaderName]}. Now it is ${headers[iwaHeaderName]}. If you are bundling a non-IWA, set integrityBlockSign { isIwa: false } in your plugins configs.`
+      );
+    }
+  }
+
+  // TODO: Parse and check `Content-Security-Policy` value.
+  const cspHeaderName = Object.keys(csp)[0];
+  if (!headers[cspHeaderName]) {
+    throw new Error(
+      `For Isolated Web Apps ${cspHeaderName} should not be empty. Default value can be used: ${JSON.stringify(
+        csp[cspHeaderName]
+      )}. In case you are bundling a non-IWA, set integrityBlockSign { isIwa: false } in your plugins configs.`
+    );
+  }
+}
+
+function maybeSetIwaDefaults(opts) {
+  if (
+    opts.integrityBlockSign.isIwa !== undefined &&
+    !opts.integrityBlockSign.isIwa
+  ) {
+    return;
+  }
+
+  // `isIwa` is defaulting to `true` if not provided as currently there is no
+  // other use case for integrityBlockSign outside of IWAs.
+  opts.integrityBlockSign.isIwa = true;
+
+  if (opts.headerOverride === undefined) {
+    console.info(
+      `Setting the empty headerOverrides to IWA defaults. To bundle a non-IWA, set \`integrityBlockSign { isIwa: false }\` in your plugin configs. Defaults are set to:\n ${JSON.stringify(
+        iwaHeaderDefaults
+      )}`
+    );
+    opts.headerOverride = Object.assign({}, iwaHeaderDefaults);
+  }
+}
+
+function validateIntegrityBlockOptions(opts) {
+  maybeSetIwaDefaults(opts);
+
   if (opts.primaryURL !== undefined) {
     throw new Error('Primary URL is not supported for Isolated Web Apps.');
   }
@@ -140,13 +202,22 @@ function validateIWAOptions(opts) {
       );
     }
   }
+
+  if (
+    opts.integrityBlockSign.isIwa === true &&
+    typeof opts.headerOverride === 'object'
+  ) {
+    checkIwaOverrideHeaders(opts.headerOverride);
+  }
 }
 
 function validateOptions(opts) {
   if (opts.baseURL !== '' && !opts.baseURL.endsWith('/')) {
     throw new Error('Non-empty baseURL must end with "/".');
   }
-  if (opts.integrityBlockSign) validateIWAOptions(opts);
+  if (opts.integrityBlockSign) {
+    validateIntegrityBlockOptions(opts);
+  }
 }
 
 module.exports = class WebBundlePlugin {
@@ -166,7 +237,7 @@ module.exports = class WebBundlePlugin {
         builder,
         opts.static.baseURL || opts.baseURL,
         opts.static.dir,
-        opts.headerOverride
+        opts
       );
     }
 
@@ -181,7 +252,7 @@ module.exports = class WebBundlePlugin {
         opts.baseURL,
         assetName, // This contains the relative path to the base dir already.
         assetBuffer,
-        opts.headerOverride
+        opts
       );
     }
 

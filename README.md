@@ -143,7 +143,7 @@ Specifies WebBundle format version.
 
 ### `integrityBlockSign`
 
-Type: `{ key: KeyObject }`
+Type: `{ key: KeyObject, isIwa: boolean }`
 
 Object specifying the signing options with
 [Integrity Block](https://github.com/WICG/webpackage/blob/main/explainers/integrity-signature.md).
@@ -167,6 +167,15 @@ and `END` texts and line breaks (`\n`). Below an example `.env` file:
 ```bash
 ED25519KEY="-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----"
 ```
+
+### `integrityBlockSign.isIwa`
+
+Type: `boolean`
+
+If `undefined` or `true`, enforces certain IWA-related checks for the headers.
+Also if `headerOverride` together with the previous is undefined, adds default
+IWA headers. If set to `false`, skips validation checks and doesn't tamper with
+the headers.
 
 ### `headerOverride`
 
