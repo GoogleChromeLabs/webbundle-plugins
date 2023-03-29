@@ -25,6 +25,7 @@ const {
   iwaHeaderDefaults,
   invariableIwaHeaders,
   csp,
+  CSP_HEADER_NAME,
 } = require('./iwa-header-constants');
 
 const PLUGIN_NAME = 'webbundle-webpack-plugin';
@@ -152,11 +153,10 @@ function checkIwaOverrideHeaders(headers) {
   }
 
   // TODO: Parse and check `Content-Security-Policy` value.
-  const cspHeaderName = Object.keys(csp)[0];
-  if (!headers[cspHeaderName]) {
+  if (!headers[CSP_HEADER_NAME]) {
     throw new Error(
-      `For Isolated Web Apps ${cspHeaderName} should not be empty. Default value can be used: ${JSON.stringify(
-        csp[cspHeaderName]
+      `For Isolated Web Apps, ${CSP_HEADER_NAME} must have the following minimal strictness: ${JSON.stringify(
+        csp[CSP_HEADER_NAME]
       )}. In case you are bundling a non-IWA, set integrityBlockSign { isIwa: false } in your plugins configs.`
     );
   }
@@ -165,7 +165,7 @@ function checkIwaOverrideHeaders(headers) {
 function maybeSetIwaDefaults(opts) {
   if (
     opts.integrityBlockSign.isIwa !== undefined &&
-    !opts.integrityBlockSign.isIwa
+    opts.integrityBlockSign.isIwa === false
   ) {
     return;
   }
@@ -180,7 +180,7 @@ function maybeSetIwaDefaults(opts) {
         iwaHeaderDefaults
       )}`
     );
-    opts.headerOverride = Object.assign({}, iwaHeaderDefaults);
+    opts.headerOverride = iwaHeaderDefaults;
   }
 }
 

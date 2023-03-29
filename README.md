@@ -172,10 +172,11 @@ ED25519KEY="-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh
 
 Type: `boolean`
 
-If `undefined` or `true`, enforces certain IWA-related checks for the headers.
-Also if `headerOverride` together with the previous is undefined, adds default
-IWA headers. If set to `false`, skips validation checks and doesn't tamper with
-the headers.
+If `undefined` or `true`, enforces certain
+[Isolated Web App](https://github.com/WICG/isolated-web-apps) -related checks
+for the headers. Also if `headerOverride` together with the previous is
+undefined, adds default IWA headers. If set to `false`, skips validation checks
+and doesn't tamper with the headers.
 
 ### `headerOverride`
 
