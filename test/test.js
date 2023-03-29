@@ -140,11 +140,23 @@ test('integrityBlockSign', async (t) => {
 
 test('headerOverride - IWA with good headers', async (t) => {
   const goodHeadersTestCases = [
-    iwaHeaderDefaults,
-    () => iwaHeaderDefaults,
-    // When `integrityBlockSign.isIwa` and `headerOverride` are undefined,
-    // `iwaHeaderDefaults` will be added to each resource.
-    undefined,
+    {
+      headerOverride: iwaHeaderDefaults,
+      expectedHeaders: iwaHeaderDefaults,
+    },
+    {
+      headerOverride: () => iwaHeaderDefaults,
+      expectedHeaders: iwaHeaderDefaults,
+    },
+    {
+      // When `integrityBlockSign.isIwa` and `headerOverride` are undefined, `iwaHeaderDefaults` will be added to each resource.
+      headerOverride: undefined,
+      expectedHeaders: iwaHeaderDefaults,
+    },
+    {
+      headerOverride: { ...iwaHeaderDefaults, 'X-Csrf-Token': 'hello-world' },
+      expectedHeaders: { ...iwaHeaderDefaults, 'X-Csrf-Token': 'hello-world' },
+    },
   ];
 
   for (const testCase of goodHeadersTestCases) {
@@ -156,7 +168,7 @@ test('headerOverride - IWA with good headers', async (t) => {
           key: TEST_ED25519_PRIVATE_KEY,
           isIwa: undefined, // Could also be empty, but highlighting it like this.
         },
-        headerOverride: testCase,
+        headerOverride: testCase.headerOverride,
       })
     ).memfs;
     t.deepEqual(signed.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
@@ -167,7 +179,7 @@ test('headerOverride - IWA with good headers', async (t) => {
 
     const usignedBundle = new wbn.Bundle(swbnFile.slice(-wbnLength));
     for (const url of usignedBundle.urls) {
-      for (const headerName of Object.keys(iwaHeaderDefaults)) {
+      for (const headerName of Object.keys(testCase.expectedHeaders)) {
         t.is(
           usignedBundle.getResponse(url).headers[headerName],
           iwaHeaderDefaults[headerName]
