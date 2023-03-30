@@ -19,8 +19,8 @@ const iwaHeaderDefaults = Object.freeze({
 
 function headerNamesToLowerCase(headers) {
   const lowerCaseHeaders = {};
-  for (const key of Object.keys(headers)) {
-    lowerCaseHeaders[key.toLowerCase()] = headers[key];
+  for (const [headerName, headerValue] of Object.entries(headers)) {
+    lowerCaseHeaders[headerName.toLowerCase()] = headerValue;
   }
   return lowerCaseHeaders;
 }

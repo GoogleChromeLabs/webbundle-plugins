@@ -202,11 +202,10 @@ test('headerOverride - IWA with good headers', async (t) => {
 
       const usignedBundle = new wbn.Bundle(swbnFile.slice(-wbnLength));
       for (const url of usignedBundle.urls) {
-        for (const headerName of Object.keys(iwaHeaderDefaults)) {
-          t.is(
-            usignedBundle.getResponse(url).headers[headerName],
-            iwaHeaderDefaults[headerName]
-          );
+        for (const [headerName, headerValue] of Object.entries(
+          iwaHeaderDefaults
+        )) {
+          t.is(usignedBundle.getResponse(url).headers[headerName], headerValue);
         }
       }
     }
@@ -289,11 +288,10 @@ test("headerOverride - non-IWA doesn't enforce IWA headers", async (t) => {
     const usignedBundle = new wbn.Bundle(swbnFile.slice(-wbnLength));
     for (const url of usignedBundle.urls) {
       // Added the expected headers.
-      for (const headerName of Object.keys(headersTestCase.expectedHeaders)) {
-        t.is(
-          usignedBundle.getResponse(url).headers[headerName],
-          headersTestCase.expectedHeaders[headerName]
-        );
+      for (const [headerName, headerValue] of Object.entries(
+        headersTestCase.expectedHeaders
+      )) {
+        t.is(usignedBundle.getResponse(url).headers[headerName], headerValue);
       }
       // Did not add any IWA headers automatically.
       for (const headerName of Object.keys(iwaHeaderDefaults)) {

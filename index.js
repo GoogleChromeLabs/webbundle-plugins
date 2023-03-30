@@ -217,8 +217,8 @@ module.exports = class WebBundlePlugin {
       );
     }
 
-    for (const assetName of Object.keys(compilation.assets)) {
-      const assetRawSource = compilation.assets[assetName].source();
+    for (const [assetName, assetValue] of Object.entries(compilation.assets)) {
+      const assetRawSource = assetValue.source();
       const assetBuffer = Buffer.isBuffer(assetRawSource)
         ? assetRawSource
         : Buffer.from(assetRawSource);
