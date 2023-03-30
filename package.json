@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "ava",
-    "lint": "npx prettier --write **/*.{js,md} --config ./package.json"
+    "lint": "npx prettier --write {**/*,*}.{js,md} --config ./package.json"
   },
   "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",
   "license": "Apache-2.0",

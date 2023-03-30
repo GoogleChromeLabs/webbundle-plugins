@@ -25,27 +25,36 @@ function headerNamesToLowerCase(headers) {
   return lowerCaseHeaders;
 }
 
-function checkIwaOverrideHeaders(headers) {
+const ifNotIwaMsg =
+  'If you are bundling a non-IWA, set integrityBlockSign { isIwa: false } in your plugins configs.';
+
+// Checks if the IWA headers are strict enough or adds in case missing.
+function checkAndAddIwaHeaders(headers) {
   const lowerCaseHeaders = headerNamesToLowerCase(headers);
+
+  // Add missing IWA headers.
+  for (const iwaHeaderName of Object.keys(iwaHeaderDefaults)) {
+    if (!lowerCaseHeaders[iwaHeaderName]) {
+      console.log(
+        `For Isolated Web Apps, ${iwaHeaderName} header was automatically set to ${iwaHeaderDefaults[iwaHeaderName]}. ${ifNotIwaMsg}`
+      );
+      headers[iwaHeaderName] = iwaHeaderDefaults[iwaHeaderName];
+    }
+  }
+
+  // Check strictness of IWA headers (apart from special case `Content-Security-Policy`).
   for (const iwaHeaderName of Object.keys(invariableIwaHeaders)) {
     if (
-      lowerCaseHeaders[iwaHeaderName].toLowerCase() !==
-      invariableIwaHeaders[iwaHeaderName].toLowerCase()
+      lowerCaseHeaders[iwaHeaderName] && lowerCaseHeaders[iwaHeaderName].toLowerCase() !==
+      invariableIwaHeaders[iwaHeaderName]
     ) {
       throw new Error(
-        `For Isolated Web Apps ${iwaHeaderName} should be ${invariableIwaHeaders[iwaHeaderName]}. Now it is ${headers[iwaHeaderName]}. If you are bundling a non-IWA, set integrityBlockSign { isIwa: false } in your plugins configs.`
+        `For Isolated Web Apps ${iwaHeaderName} should be ${invariableIwaHeaders[iwaHeaderName]}. Now it is ${headers[iwaHeaderName]}. ${ifNotIwaMsg}`
       );
     }
   }
 
-  // TODO: Parse and check `Content-Security-Policy` value.
-  if (!lowerCaseHeaders[CSP_HEADER_NAME]) {
-    throw new Error(
-      `For Isolated Web Apps, ${CSP_HEADER_NAME} must have the following minimal strictness: ${JSON.stringify(
-        csp[CSP_HEADER_NAME]
-      )}. In case you are bundling a non-IWA, set integrityBlockSign { isIwa: false } in your plugins configs.`
-    );
-  }
+  // TODO: Parse and check strictness of `Content-Security-Policy`.
 }
 
 module.exports = {
@@ -57,5 +66,5 @@ module.exports = {
   invariableIwaHeaders,
   iwaHeaderDefaults,
   headerNamesToLowerCase,
-  checkIwaOverrideHeaders,
+  checkAndAddIwaHeaders,
 };

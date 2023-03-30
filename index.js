@@ -21,7 +21,7 @@ const { BundleBuilder, combineHeadersForUrl } = require('wbn');
 const { IntegrityBlockSigner, WebBundleId } = require('wbn-sign');
 const webpack = require('webpack');
 const { RawSource } = require('webpack-sources');
-const { iwaHeaderDefaults, checkIwaOverrideHeaders } = require('./iwa-headers');
+const { iwaHeaderDefaults, checkAndAddIwaHeaders } = require('./iwa-headers');
 
 const PLUGIN_NAME = 'webbundle-webpack-plugin';
 
@@ -56,7 +56,7 @@ function addAsset(
       pluginOptions.headerOverride,
       baseURL + relativeAssetPath
     );
-    if (shouldCheckIwaHeaders) checkIwaOverrideHeaders(combinedIndexHeaders);
+    if (shouldCheckIwaHeaders) checkAndAddIwaHeaders(combinedIndexHeaders);
 
     builder.addExchange(
       baseURL + relativeAssetPath,
@@ -76,7 +76,7 @@ function addAsset(
     pluginOptions.headerOverride,
     baseURLWithAssetPath
   );
-  if (shouldCheckIwaHeaders) checkIwaOverrideHeaders(combinedHeaders);
+  if (shouldCheckIwaHeaders) checkAndAddIwaHeaders(combinedHeaders);
 
   builder.addExchange(
     baseURLWithAssetPath,
@@ -183,7 +183,7 @@ function validateIntegrityBlockOptions(opts) {
     opts.integrityBlockSign.isIwa === true &&
     typeof opts.headerOverride === 'object'
   ) {
-    checkIwaOverrideHeaders(opts.headerOverride);
+    checkAndAddIwaHeaders(opts.headerOverride);
   }
 }
 
