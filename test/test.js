@@ -134,51 +134,44 @@ test('integrityBlockSign', async (t) => {
 
 test('headerOverride - IWA with good headers', async (t) => {
   const headersTestCases = [
+    // These are added manually as they expect more than just `iwaHeaderDefaults`.
     {
-      // Type `object` is ok.
-      headerOverride: iwaHeaderDefaults,
-      expectedHeaders: iwaHeaderDefaults,
-    },
-    {
-      // Camel-case is ok.
-      headerOverride: {
-        ...iwaHeaderDefaults,
-        'Cross-Origin-Embedder-Policy': 'require-corp',
-      },
-      expectedHeaders: iwaHeaderDefaults,
-    },
-    {
-      // Type `function` is ok.
-      headerOverride: () => iwaHeaderDefaults,
-      expectedHeaders: iwaHeaderDefaults,
-    },
-    {
-      // When `integrityBlockSign.isIwa` and `headerOverride` are undefined,
-      // `iwaHeaderDefaults` will be added to each resource.
-      headerOverride: undefined,
-      expectedHeaders: iwaHeaderDefaults,
-    },
-    {
-      // Non-IWA headers are ok and camel case gets lower-cased.
       headerOverride: { ...iwaHeaderDefaults, 'X-Csrf-Token': 'hello-world' },
+      expectedHeaders: { ...iwaHeaderDefaults, 'x-csrf-token': 'hello-world' },
+    },
+    {
+      headerOverride: () => {
+        return { ...iwaHeaderDefaults, 'X-Csrf-Token': 'hello-world' };
+      },
       expectedHeaders: { ...iwaHeaderDefaults, 'x-csrf-token': 'hello-world' },
     },
   ];
 
-  // Missing IWA-headers will be added when `integrityBlockSign.isIwa` is either
-  // undefined or true.
-  for (const incompleteHeaders of [
+  const headersThatDefaultToIWADefaults = [
     { ...coop, ...corp, ...csp },
     { ...coep, ...corp, ...csp },
     { ...coep, ...coop, ...csp },
     { ...coep, ...coop, ...corp },
-  ]) {
+    iwaHeaderDefaults,
+    {},
+    undefined,
+    {
+      ...iwaHeaderDefaults,
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  ];
+
+  for (const headers of headersThatDefaultToIWADefaults) {
+    // Both functions and objects are ok so let's test with both.
     headersTestCases.push({
-      headerOverride: incompleteHeaders,
+      headerOverride: headers,
       expectedHeaders: iwaHeaderDefaults,
     });
+
+    // Not supported as typeof function because that's forced to return `Headers` map.
+    if (headers === undefined) continue;
     headersTestCases.push({
-      headerOverride: () => incompleteHeaders,
+      headerOverride: () => headers,
       expectedHeaders: iwaHeaderDefaults,
     });
   }
@@ -209,10 +202,10 @@ test('headerOverride - IWA with good headers', async (t) => {
 
       const usignedBundle = new wbn.Bundle(swbnFile.slice(-wbnLength));
       for (const url of usignedBundle.urls) {
-        for (const headerName of Object.keys(headersTestCase.expectedHeaders)) {
+        for (const headerName of Object.keys(iwaHeaderDefaults)) {
           t.is(
             usignedBundle.getResponse(url).headers[headerName],
-            headersTestCase.expectedHeaders[headerName]
+            iwaHeaderDefaults[headerName]
           );
         }
       }
