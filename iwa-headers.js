@@ -25,32 +25,33 @@ function headerNamesToLowerCase(headers) {
   return lowerCaseHeaders;
 }
 
+
 const ifNotIwaMsg =
-  'If you are bundling a non-IWA, set integrityBlockSign { isIwa: false } in your plugins configs.';
+  "If you are bundling a non-IWA, set `integrityBlockSign: { isIwa: false }` in the plugin's configuration.";
 
 // Checks if the IWA headers are strict enough or adds in case missing.
 function checkAndAddIwaHeaders(headers) {
   const lowerCaseHeaders = headerNamesToLowerCase(headers);
 
   // Add missing IWA headers.
-  for (const iwaHeaderName of Object.keys(iwaHeaderDefaults)) {
+  for (const [iwaHeaderName, iwaHeaderValue] of Object.entries(iwaHeaderDefaults)) {
     if (!lowerCaseHeaders[iwaHeaderName]) {
       console.log(
-        `For Isolated Web Apps, ${iwaHeaderName} header was automatically set to ${iwaHeaderDefaults[iwaHeaderName]}. ${ifNotIwaMsg}`
+        `For Isolated Web Apps, ${iwaHeaderName} header was automatically set to ${iwaHeaderValue}. ${ifNotIwaMsg}`
       );
-      headers[iwaHeaderName] = iwaHeaderDefaults[iwaHeaderName];
+      headers[iwaHeaderName] = iwaHeaderValue;
     }
   }
 
   // Check strictness of IWA headers (apart from special case `Content-Security-Policy`).
-  for (const iwaHeaderName of Object.keys(invariableIwaHeaders)) {
+  for (const [iwaHeaderName, iwaHeaderValue] of Object.entries(invariableIwaHeaders)) {
     if (
       lowerCaseHeaders[iwaHeaderName] &&
       lowerCaseHeaders[iwaHeaderName].toLowerCase() !==
-        invariableIwaHeaders[iwaHeaderName]
+      iwaHeaderValue
     ) {
       throw new Error(
-        `For Isolated Web Apps ${iwaHeaderName} should be ${invariableIwaHeaders[iwaHeaderName]}. Now it is ${headers[iwaHeaderName]}. ${ifNotIwaMsg}`
+        `For Isolated Web Apps ${iwaHeaderName} should be ${iwaHeaderValue}. Now it is ${headers[iwaHeaderName]}. ${ifNotIwaMsg}`
       );
     }
   }
