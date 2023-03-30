@@ -21,12 +21,7 @@ const { BundleBuilder, combineHeadersForUrl } = require('wbn');
 const { IntegrityBlockSigner, WebBundleId } = require('wbn-sign');
 const webpack = require('webpack');
 const { RawSource } = require('webpack-sources');
-const {
-  iwaHeaderDefaults,
-  invariableIwaHeaders,
-  csp,
-  CSP_HEADER_NAME,
-} = require('./iwa-header-constants');
+const { iwaHeaderDefaults, checkIwaOverrideHeaders } = require('./iwa-headers');
 
 const PLUGIN_NAME = 'webbundle-webpack-plugin';
 
@@ -141,25 +136,6 @@ function maybeSignWebBundle(webBundle, opts, infoLogger) {
 
   infoLogger(`${new WebBundleId(opts.integrityBlockSign.key)}`);
   return signedWebBundle;
-}
-
-function checkIwaOverrideHeaders(headers) {
-  for (const iwaHeaderName of Object.keys(invariableIwaHeaders)) {
-    if (headers[iwaHeaderName] !== invariableIwaHeaders[iwaHeaderName]) {
-      throw new Error(
-        `For Isolated Web Apps ${iwaHeaderName} should be ${invariableIwaHeaders[iwaHeaderName]}. Now it is ${headers[iwaHeaderName]}. If you are bundling a non-IWA, set integrityBlockSign { isIwa: false } in your plugins configs.`
-      );
-    }
-  }
-
-  // TODO: Parse and check `Content-Security-Policy` value.
-  if (!headers[CSP_HEADER_NAME]) {
-    throw new Error(
-      `For Isolated Web Apps, ${CSP_HEADER_NAME} must have the following minimal strictness: ${JSON.stringify(
-        csp[CSP_HEADER_NAME]
-      )}. In case you are bundling a non-IWA, set integrityBlockSign { isIwa: false } in your plugins configs.`
-    );
-  }
 }
 
 function maybeSetIwaDefaults(opts) {

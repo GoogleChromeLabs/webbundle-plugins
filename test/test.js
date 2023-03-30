@@ -23,13 +23,7 @@ const fs = require('fs');
 const { join } = require('path');
 
 const WebBundlePlugin = require('..');
-const {
-  coep,
-  coop,
-  corp,
-  csp,
-  iwaHeaderDefaults,
-} = require('../iwa-header-constants');
+const { coep, coop, corp, csp, iwaHeaderDefaults } = require('../iwa-headers');
 
 const TEST_ED25519_PRIVATE_KEY = wbnSign.parsePemKey(
   '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'
@@ -141,10 +135,20 @@ test('integrityBlockSign', async (t) => {
 test('headerOverride - IWA with good headers', async (t) => {
   const goodHeadersTestCases = [
     {
+      // Type `object` is ok.
       headerOverride: iwaHeaderDefaults,
       expectedHeaders: iwaHeaderDefaults,
     },
     {
+      // Camel-case is ok.
+      headerOverride: {
+        ...iwaHeaderDefaults,
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+      },
+      expectedHeaders: iwaHeaderDefaults,
+    },
+    {
+      // Type `function` is ok.
       headerOverride: () => iwaHeaderDefaults,
       expectedHeaders: iwaHeaderDefaults,
     },
@@ -154,6 +158,7 @@ test('headerOverride - IWA with good headers', async (t) => {
       expectedHeaders: iwaHeaderDefaults,
     },
     {
+      // Non-IWA headers are ok.
       headerOverride: { ...iwaHeaderDefaults, 'X-Csrf-Token': 'hello-world' },
       expectedHeaders: { ...iwaHeaderDefaults, 'X-Csrf-Token': 'hello-world' },
     },
