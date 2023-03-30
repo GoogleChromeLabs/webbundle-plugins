@@ -45,8 +45,9 @@ function checkAndAddIwaHeaders(headers) {
   // Check strictness of IWA headers (apart from special case `Content-Security-Policy`).
   for (const iwaHeaderName of Object.keys(invariableIwaHeaders)) {
     if (
-      lowerCaseHeaders[iwaHeaderName] && lowerCaseHeaders[iwaHeaderName].toLowerCase() !==
-      invariableIwaHeaders[iwaHeaderName]
+      lowerCaseHeaders[iwaHeaderName] &&
+      lowerCaseHeaders[iwaHeaderName].toLowerCase() !==
+        invariableIwaHeaders[iwaHeaderName]
     ) {
       throw new Error(
         `For Isolated Web Apps ${iwaHeaderName} should be ${invariableIwaHeaders[iwaHeaderName]}. Now it is ${headers[iwaHeaderName]}. ${ifNotIwaMsg}`

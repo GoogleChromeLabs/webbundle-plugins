@@ -247,7 +247,7 @@ test('headerOverride - IWA with bad headers', async (t) => {
   }
 });
 
-test('headerOverride - non-IWA doesn\'t enforce IWA headers', async (t) => {
+test("headerOverride - non-IWA doesn't enforce IWA headers", async (t) => {
   // Irrelevant what this would contain.
   const randomNonIwaHeaders = { 'x-csrf-token': 'hello-world' };
 
@@ -287,15 +287,10 @@ test('headerOverride - non-IWA doesn\'t enforce IWA headers', async (t) => {
         headerOverride: headersTestCase.headerOverride,
       })
     ).memfs;
-    t.deepEqual(signed.readdirSync('/out').sort(), [
-      'example.swbn',
-      'main.js',
-    ]);
+    t.deepEqual(signed.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
 
     const swbnFile = signed.readFileSync('/out/example.swbn');
-    const wbnLength = Number(
-      Buffer.from(swbnFile.slice(-8)).readBigUint64BE()
-    );
+    const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
     t.truthy(wbnLength < swbnFile.length);
 
     const usignedBundle = new wbn.Bundle(swbnFile.slice(-wbnLength));
@@ -309,10 +304,7 @@ test('headerOverride - non-IWA doesn\'t enforce IWA headers', async (t) => {
       }
       // Did not add any IWA headers automatically.
       for (const headerName of Object.keys(iwaHeaderDefaults)) {
-        t.is(
-          usignedBundle.getResponse(url).headers[headerName],
-          undefined
-        );
+        t.is(usignedBundle.getResponse(url).headers[headerName], undefined);
       }
     }
   }
