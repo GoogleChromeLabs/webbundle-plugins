@@ -2,6 +2,12 @@
   "name": "webbundle-webpack-plugin",
   "version": "0.1.1",
   "description": "Webpack plugin to generate WebBundle output.",
+  "keywords": [
+    "webpack",
+    "plugin",
+    "web-bundle",
+    "isolated-web-app"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "ava",
