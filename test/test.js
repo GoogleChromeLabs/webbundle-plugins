@@ -54,7 +54,7 @@ function run(options) {
 
 test('basic', async (t) => {
   const primaryURL = 'https://example.com/main.js';
-  const { stats, memfs } = await run({
+  const { memfs } = await run({
     baseURL: 'https://example.com/',
     primaryURL,
     output: 'example.wbn',
@@ -70,7 +70,7 @@ test('basic', async (t) => {
 
 test('static', async (t) => {
   const primaryURL = 'https://example.com/';
-  const { stats, memfs } = await run({
+  const { memfs } = await run({
     baseURL: 'https://example.com/',
     primaryURL,
     static: { dir: join(__dirname, 'fixtures', 'static') },
@@ -92,7 +92,7 @@ test('static', async (t) => {
 });
 
 test('relative', async (t) => {
-  const { stats, memfs } = await run({
+  const { memfs } = await run({
     static: { dir: join(__dirname, 'fixtures', 'static') },
     output: 'example.wbn',
   });
@@ -110,18 +110,16 @@ test('relative', async (t) => {
 });
 
 test('integrityBlockSign', async (t) => {
-  const signed = (
-    await run({
-      baseURL: TEST_IWA_BASE_URL,
-      output: 'example.swbn',
-      integrityBlockSign: {
-        key: TEST_ED25519_PRIVATE_KEY,
-      },
-    })
-  ).memfs;
-  t.deepEqual(signed.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
+  const { memfs } = await run({
+    baseURL: TEST_IWA_BASE_URL,
+    output: 'example.swbn',
+    integrityBlockSign: {
+      key: TEST_ED25519_PRIVATE_KEY,
+    },
+  });
+  t.deepEqual(memfs.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
 
-  const swbnFile = signed.readFileSync('/out/example.swbn');
+  const swbnFile = memfs.readFileSync('/out/example.swbn');
   const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
   t.truthy(wbnLength < swbnFile.length);
 
@@ -178,23 +176,21 @@ test('headerOverride - IWA with good headers', async (t) => {
 
   for (const headersTestCase of headersTestCases) {
     for (const isIwaTestCase of [undefined, true]) {
-      const signed = (
-        await run({
-          baseURL: TEST_IWA_BASE_URL,
-          output: 'example.swbn',
-          integrityBlockSign: {
-            key: TEST_ED25519_PRIVATE_KEY,
-            isIwa: isIwaTestCase,
-          },
-          headerOverride: headersTestCase.headerOverride,
-        })
-      ).memfs;
-      t.deepEqual(signed.readdirSync('/out').sort(), [
+      const { memfs } = await run({
+        baseURL: TEST_IWA_BASE_URL,
+        output: 'example.swbn',
+        integrityBlockSign: {
+          key: TEST_ED25519_PRIVATE_KEY,
+          isIwa: isIwaTestCase,
+        },
+        headerOverride: headersTestCase.headerOverride,
+      });
+      t.deepEqual(memfs.readdirSync('/out').sort(), [
         'example.swbn',
         'main.js',
       ]);
 
-      const swbnFile = signed.readFileSync('/out/example.swbn');
+      const swbnFile = memfs.readFileSync('/out/example.swbn');
       const wbnLength = Number(
         Buffer.from(swbnFile.slice(-8)).readBigUint64BE()
       );
@@ -268,20 +264,18 @@ test("headerOverride - non-IWA doesn't enforce IWA headers", async (t) => {
   ];
 
   for (const headersTestCase of headersTestCases) {
-    const signed = (
-      await run({
-        baseURL: TEST_IWA_BASE_URL,
-        output: 'example.swbn',
-        integrityBlockSign: {
-          key: TEST_ED25519_PRIVATE_KEY,
-          isIwa: false,
-        },
-        headerOverride: headersTestCase.headerOverride,
-      })
-    ).memfs;
-    t.deepEqual(signed.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
+    const { memfs } = await run({
+      baseURL: TEST_IWA_BASE_URL,
+      output: 'example.swbn',
+      integrityBlockSign: {
+        key: TEST_ED25519_PRIVATE_KEY,
+        isIwa: false,
+      },
+      headerOverride: headersTestCase.headerOverride,
+    });
+    t.deepEqual(memfs.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
 
-    const swbnFile = signed.readFileSync('/out/example.swbn');
+    const swbnFile = memfs.readFileSync('/out/example.swbn');
     const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
     t.truthy(wbnLength < swbnFile.length);
 
