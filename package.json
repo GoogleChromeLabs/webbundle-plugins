@@ -2,6 +2,11 @@
   "name": "rollup-plugin-webbundle",
   "version": "0.1.1",
   "description": "Rollup plugin to generate WebBundle output.",
+  "keywords": [
+    "rollup-plugin",
+    "web-bundle",
+    "isolated-web-app"
+  ],
   "main": "lib/index.js",
   "type": "module",
   "scripts": {
