@@ -22,6 +22,19 @@ import * as wbn from 'wbn';
 import * as wbnSign from 'wbn-sign';
 
 import webbundle from '../lib/index.js';
+import {
+  coep,
+  coop,
+  corp,
+  csp,
+  iwaHeaderDefaults,
+} from '../lib/iwa-headers.js';
+
+const TEST_ED25519_PRIVATE_KEY = wbnSign.parsePemKey(
+  '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'
+);
+const TEST_IWA_BASE_URL =
+  'isolated-app://4tkrnsmftl4ggvvdkfth3piainqragus2qbhf7rlz2a3wo3rh4wqaaic/';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 process.chdir(__dirname);
@@ -155,20 +168,16 @@ test('relative', async (t) => {
 });
 
 test('integrityBlockSign', async (t) => {
-  const testPrivateKey = wbnSign.parsePemKey(
-    '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'
-  );
-  const fileName = 'out.wbn';
+  const outputFileName = 'out.swbn';
 
   const bundle = await rollup.rollup({
     input: 'fixtures/index.js',
     plugins: [
       webbundle({
-        baseURL:
-          'isolated-app://4tkrnsmftl4ggvvdkfth3piainqragus2qbhf7rlz2a3wo3rh4wqaaic/',
-        output: fileName,
+        baseURL: TEST_IWA_BASE_URL,
+        output: outputFileName,
         integrityBlockSign: {
-          key: testPrivateKey,
+          key: TEST_ED25519_PRIVATE_KEY,
         },
       }),
     ],
@@ -176,15 +185,213 @@ test('integrityBlockSign', async (t) => {
   const { output } = await bundle.generate({ format: 'esm' });
   const keys = Object.keys(output);
   t.is(keys.length, 1);
-  t.is(output[keys[0]].fileName, fileName);
+  t.is(output[keys[0]].fileName, outputFileName);
 
   const swbnFile = output[keys[0]].source;
   const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
   t.truthy(wbnLength < swbnFile.length);
   const { signedWebBundle } = new wbnSign.IntegrityBlockSigner(
     swbnFile.slice(-wbnLength),
-    { key: testPrivateKey }
+    { key: TEST_ED25519_PRIVATE_KEY }
   ).sign();
 
   t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
+});
+
+test('headerOverride - IWA with good headers', async (t) => {
+  const headersTestCases = [
+    // These are added manually as they expect more than just `iwaHeaderDefaults`.
+    {
+      headerOverride: {
+        ...iwaHeaderDefaults,
+        'X-Csrf-Token': 'hello-world',
+      },
+      expectedHeaders: {
+        ...iwaHeaderDefaults,
+        'x-csrf-token': 'hello-world',
+      },
+    },
+    {
+      headerOverride: () => {
+        return {
+          ...iwaHeaderDefaults,
+          'X-Csrf-Token': 'hello-world',
+        };
+      },
+      expectedHeaders: {
+        ...iwaHeaderDefaults,
+        'x-csrf-token': 'hello-world',
+      },
+    },
+  ];
+
+  const headersThatDefaultToIWADefaults = [
+    { ...coop, ...corp, ...csp },
+    { ...coep, ...corp, ...csp },
+    { ...coep, ...coop, ...csp },
+    { ...coep, ...coop, ...corp },
+    iwaHeaderDefaults,
+    {},
+    undefined,
+    {
+      ...iwaHeaderDefaults,
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  ];
+
+  for (const headers of headersThatDefaultToIWADefaults) {
+    // Both functions and objects are ok so let's test with both.
+    headersTestCases.push({
+      headerOverride: headers,
+      expectedHeaders: iwaHeaderDefaults,
+    });
+
+    // Not supported as typeof function because that's forced to return `Headers` map.
+    if (headers === undefined) continue;
+    headersTestCases.push({
+      headerOverride: () => headers,
+      expectedHeaders: iwaHeaderDefaults,
+    });
+  }
+
+  const outputFileName = 'out.swbn';
+  for (const headersTestCase of headersTestCases) {
+    for (const isIwaTestCase of [undefined, true]) {
+      const bundle = await rollup.rollup({
+        input: 'fixtures/index.js',
+        plugins: [
+          webbundle({
+            baseURL: TEST_IWA_BASE_URL,
+            output: outputFileName,
+            integrityBlockSign: {
+              key: TEST_ED25519_PRIVATE_KEY,
+              isIwa: isIwaTestCase,
+            },
+            headerOverride: headersTestCase.headerOverride,
+          }),
+        ],
+      });
+      const { output } = await bundle.generate({ format: 'esm' });
+      const keys = Object.keys(output);
+      t.is(keys.length, 1);
+      t.is(output[keys[0]].fileName, outputFileName);
+
+      const swbnFile = output[keys[0]].source;
+      const wbnLength = Number(
+        Buffer.from(swbnFile.slice(-8)).readBigUint64BE()
+      );
+      t.truthy(wbnLength < swbnFile.length);
+
+      const usignedBundle = new wbn.Bundle(swbnFile.slice(-wbnLength));
+      for (const url of usignedBundle.urls) {
+        for (const [headerName, headerValue] of Object.entries(
+          iwaHeaderDefaults
+        )) {
+          t.is(usignedBundle.getResponse(url).headers[headerName], headerValue);
+        }
+      }
+    }
+  }
+});
+
+test('headerOverride - IWA with bad headers', async (t) => {
+  const badHeadersTestCase = [
+    { 'cross-origin-embedder-policy': 'unsafe-none' },
+    { 'cross-origin-opener-policy': 'unsafe-none' },
+    { 'cross-origin-resource-policy': 'cross-origin' },
+  ];
+
+  for (const badHeaders of badHeadersTestCase) {
+    for (const isIwaTestCase of [undefined, true]) {
+      await t.throwsAsync(
+        async () => {
+          await rollup.rollup({
+            input: 'fixtures/index.js',
+            plugins: [
+              webbundle({
+                baseURL: TEST_IWA_BASE_URL,
+                output: 'example.swbn',
+                integrityBlockSign: {
+                  key: TEST_ED25519_PRIVATE_KEY,
+                  isIwa: isIwaTestCase,
+                },
+                headerOverride: badHeaders,
+              }),
+            ],
+          });
+        },
+        { instanceOf: Error }
+      );
+    }
+  }
+});
+
+test("headerOverride - non-IWA doesn't enforce IWA headers", async (t) => {
+  // Irrelevant what this would contain.
+  const randomNonIwaHeaders = { 'x-csrf-token': 'hello-world' };
+
+  const headersTestCases = [
+    {
+      // Type `object` is ok.
+      headerOverride: randomNonIwaHeaders,
+      expectedHeaders: randomNonIwaHeaders,
+    },
+    {
+      // Same but camel case, which gets lower-cased.
+      headerOverride: { 'X-Csrf-Token': 'hello-world' },
+      expectedHeaders: randomNonIwaHeaders,
+    },
+    {
+      // Type `function` is ok.
+      headerOverride: () => randomNonIwaHeaders,
+      expectedHeaders: randomNonIwaHeaders,
+    },
+    {
+      // When `integrityBlockSign.isIwa` is false and `headerOverride` is
+      // `undefined`, nothing unusual gets added.
+      headerOverride: undefined,
+      expectedHeaders: {},
+    },
+  ];
+
+  const outputFileName = 'out.swbn';
+  for (const headersTestCase of headersTestCases) {
+    const bundle = await rollup.rollup({
+      input: 'fixtures/index.js',
+      plugins: [
+        webbundle({
+          baseURL: TEST_IWA_BASE_URL,
+          output: outputFileName,
+          integrityBlockSign: {
+            key: TEST_ED25519_PRIVATE_KEY,
+            isIwa: false,
+          },
+          headerOverride: headersTestCase.headerOverride,
+        }),
+      ],
+    });
+
+    const { output } = await bundle.generate({ format: 'esm' });
+    const keys = Object.keys(output);
+    t.is(keys.length, 1);
+    t.is(output[keys[0]].fileName, outputFileName);
+    const swbnFile = output[keys[0]].source;
+
+    const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
+    t.truthy(wbnLength < swbnFile.length);
+
+    const usignedBundle = new wbn.Bundle(swbnFile.slice(-wbnLength));
+    for (const url of usignedBundle.urls) {
+      // Added the expected headers.
+      for (const [headerName, headerValue] of Object.entries(
+        headersTestCase.expectedHeaders
+      )) {
+        t.is(usignedBundle.getResponse(url).headers[headerName], headerValue);
+      }
+      // Did not add any IWA headers automatically.
+      for (const headerName of Object.keys(iwaHeaderDefaults)) {
+        t.is(usignedBundle.getResponse(url).headers[headerName], undefined);
+      }
+    }
+  }
 });

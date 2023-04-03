@@ -158,6 +158,15 @@ and `END` texts and line breaks (`\n`). Below an example `.env` file:
 ED25519KEY="-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----"
 ```
 
+### `integrityBlockSign.isIwa`
+
+Type: `boolean`
+
+If `undefined` or `true`, enforces certain
+[Isolated Web App](https://github.com/WICG/isolated-web-apps) -related checks
+for the headers. Also adds default IWA headers if completely missing. If set to
+`false`, skips validation checks and doesn't tamper with the headers.
+
 ### `headerOverride`
 
 Type: `{ [key: string]: string; }` |
