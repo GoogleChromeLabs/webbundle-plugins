@@ -11,6 +11,7 @@
   "type": "module",
   "main": "index.cjs",
   "scripts": {
+    "prepack": "npm run build",
     "test": "ava",
     "lint": "npx prettier --write {**/*,*}.{cjs,js,md} --config ./package.json",
     "build": "esbuild --bundle --format=cjs --external:webpack --outfile=lib/index.cjs index.js --platform=node"
