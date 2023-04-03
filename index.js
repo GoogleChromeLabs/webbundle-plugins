@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-const fs = require('fs');
-const path = require('path');
-const mime = require('mime');
-const { BundleBuilder, combineHeadersForUrl } = require('wbn');
-const { IntegrityBlockSigner, WebBundleId } = require('wbn-sign');
-const webpack = require('webpack');
-const { RawSource } = require('webpack-sources');
-const { iwaHeaderDefaults, checkAndAddIwaHeaders } = require('./iwa-headers');
+import * as fs from 'fs';
+import * as path from 'path';
+import mime from 'mime';
+import webpack from 'webpack';
+import { RawSource } from 'webpack-sources';
+import { BundleBuilder, combineHeadersForUrl } from 'wbn';
+import { IntegrityBlockSigner, WebBundleId } from 'wbn-sign';
+import { iwaHeaderDefaults, checkAndAddIwaHeaders } from './iwa-headers.js';
 
 const PLUGIN_NAME = 'webbundle-webpack-plugin';
 
@@ -196,7 +196,7 @@ function validateOptions(opts) {
   }
 }
 
-module.exports = class WebBundlePlugin {
+export class WebBundlePlugin {
   constructor(opts) {
     this.opts = Object.assign({}, defaults, opts);
     validateOptions(this.opts);
@@ -262,4 +262,4 @@ module.exports = class WebBundlePlugin {
       });
     }
   }
-};
+}
