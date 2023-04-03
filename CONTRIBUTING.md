@@ -43,3 +43,8 @@ extension and then in VScode's settings have the following entries:
         "editor.defaultFormatter": "esbenp.prettier-vscode"
 }
 ```
+
+## Publishing to npm
+
+Note that the library has to be built (`npm run build`) before publishing
+(`npm publish --registry <URL>`) new version to compile the code into CommonJS.

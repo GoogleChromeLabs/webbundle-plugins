@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-const test = require('ava');
-const webpack = require('webpack');
-const MemoryFS = require('memory-fs');
-const wbn = require('wbn');
-const wbnSign = require('wbn-sign');
-const fs = require('fs');
-const { join } = require('path');
+import test from 'ava';
+import webpack from 'webpack';
+import MemoryFS from 'memory-fs';
+import url from 'url';
+import fs from 'fs';
+import * as path from 'path';
+import * as wbn from 'wbn';
+import * as wbnSign from 'wbn-sign';
 
-const WebBundlePlugin = require('..');
-const { coep, coop, corp, csp, iwaHeaderDefaults } = require('../iwa-headers');
+import { WebBundlePlugin } from '../index.js';
+import { coep, coop, corp, csp, iwaHeaderDefaults } from '../iwa-headers.js';
+
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const TEST_ED25519_PRIVATE_KEY = wbnSign.parsePemKey(
   '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'
@@ -36,7 +40,7 @@ function run(options) {
     const compiler = webpack({
       mode: 'development',
       devtool: false,
-      entry: join(__dirname, 'fixtures', 'app'),
+      entry: path.join(__dirname, 'fixtures', 'app'),
       bail: true,
       output: {
         path: '/out',
@@ -73,12 +77,12 @@ test('static', async (t) => {
   const { memfs } = await run({
     baseURL: 'https://example.com/',
     primaryURL,
-    static: { dir: join(__dirname, 'fixtures', 'static') },
+    static: { dir: path.join(__dirname, 'fixtures', 'static') },
     output: 'example.wbn',
   });
   t.deepEqual(memfs.readdirSync('/out').sort(), ['example.wbn', 'main.js']);
   const html = fs.readFileSync(
-    join(__dirname, 'fixtures', 'static', 'index.html')
+    path.join(__dirname, 'fixtures', 'static', 'index.html')
   );
   const bundle = new wbn.Bundle(memfs.readFileSync('/out/example.wbn'));
   t.is(bundle.primaryURL, primaryURL);
@@ -93,12 +97,12 @@ test('static', async (t) => {
 
 test('relative', async (t) => {
   const { memfs } = await run({
-    static: { dir: join(__dirname, 'fixtures', 'static') },
+    static: { dir: path.join(__dirname, 'fixtures', 'static') },
     output: 'example.wbn',
   });
   t.deepEqual(memfs.readdirSync('/out').sort(), ['example.wbn', 'main.js']);
   const html = fs.readFileSync(
-    join(__dirname, 'fixtures', 'static', 'index.html')
+    path.join(__dirname, 'fixtures', 'static', 'index.html')
   );
   const js = memfs.readFileSync('/out/main.js');
   const bundle = new wbn.Bundle(memfs.readFileSync('/out/example.wbn'));

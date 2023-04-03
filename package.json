@@ -8,10 +8,12 @@
     "web-bundle",
     "isolated-web-app"
   ],
-  "main": "index.js",
+  "type": "module",
+  "main": "index.cjs",
   "scripts": {
     "test": "ava",
-    "lint": "npx prettier --write {**/*,*}.{js,md} --config ./package.json"
+    "lint": "npx prettier --write {**/*,*}.{cjs,js,md} --config ./package.json",
+    "build": "esbuild --bundle --format=cjs --external:webpack --outfile=lib/index.cjs index.js --platform=node"
   },
   "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",
   "license": "Apache-2.0",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "ava": "^4.3.3",
+    "esbuild": "^0.17.15",
     "memory-fs": "^0.5.0",
     "prettier": "2.8.0",
     "webpack": "^5.74.0"
