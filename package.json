@@ -1,0 +1,35 @@
+{
+  "name": "webbundle-plugins",
+  "scripts": {
+    "test": "ava",
+    "build": "npm run build --workspaces",
+    "lint": "npx prettier --write {**/*,*}.{cjs,js,md,json} --config ./package.json --no-error-on-unmatched-pattern",
+    "update-snapshots": "ava --update-snapshots"
+  },
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "private": true,
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "ava": "^4.3.3",
+    "prettier": "2.8.0"
+  },
+  "engines": {
+    "node": ">= 14.0.0"
+  },
+  "prettier": {
+    "tabWidth": 2,
+    "semi": true,
+    "singleQuote": true,
+    "printWidth": 80,
+    "proseWrap": "always"
+  },
+  "ava": {
+    "workerThreads": false,
+    "files": [
+      "!**/fixtures/**"
+    ]
+  }
+}

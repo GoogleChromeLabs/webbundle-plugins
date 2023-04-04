@@ -1,0 +1,51 @@
+name: Node.js CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version:
+          [
+            { node: 14.x, npm: 7.x },
+            { node: 16.x, npm: 7.x },
+            { node: 18.x, npm: 8.x },
+          ]
+        bundler-version:
+          [
+            { rollup: 1.21.x, webpack: 4.0.x },
+            { rollup: ^1.0.0, webpack: ^4.0.0 },
+            { rollup: ^2.0.0, webpack: 5.0.x },
+            { rollup: ^3.0.0, webpack: ^5.0.0 },
+          ]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version.node }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version.node }}
+      - run: npm install -g npm@${{ matrix.node-version.npm }}
+      - run: npm i
+      - run: npm install rollup@${{ matrix.bundler-version.rollup }}
+        working-directory: ./packages/rollup-plugin-webbundle
+      - run: npm install webpack@${{ matrix.bundler-version.webpack }}
+        working-directory: ./packages/webbundle-webpack-plugin
+      - run: npm run build
+      - run: npm test
+        env:
+          CI: true
+
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: creyD/prettier_action@v4.3
+        with:
+          prettier_options: --write **/*.{js,ts}
+          only_changed: True
+          dry: True
+          prettier_version: 2.7.1

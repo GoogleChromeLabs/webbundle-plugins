@@ -11,16 +11,16 @@
   "type": "module",
   "main": "index.cjs",
   "scripts": {
-    "prepack": "npm run build",
-    "test": "ava",
-    "lint": "npx prettier --write {**/*,*}.{cjs,js,md} --config ./package.json",
-    "build": "esbuild --bundle --format=cjs --external:webpack --outfile=lib/index.cjs index.js --platform=node"
+    "prepack": "npm run build && cp ../../LICENSE ./LICENSE",
+    "postpack": "rm -f ./LICENSE",
+    "build": "esbuild --bundle --format=cjs --external:webpack --outfile=lib/index.cjs src/index.js --platform=node"
   },
   "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/GoogleChromeLabs/webbundle-webpack-plugin.git"
+    "url": "https://github.com/GoogleChromeLabs/webbundle-webpack-plugin.git",
+    "directory": "packages/webbundle-webpack-plugin"
   },
   "peerDependencies": {
     "webpack": ">=4.0.0 <6.0.0"
@@ -32,25 +32,11 @@
     "webpack-sources": "^1.4.3"
   },
   "devDependencies": {
-    "ava": "^4.3.3",
     "esbuild": "^0.17.15",
     "memory-fs": "^0.5.0",
-    "prettier": "2.8.0",
     "webpack": "^5.74.0"
   },
   "engines": {
-    "node": ">= 12.0.0"
-  },
-  "ava": {
-    "files": [
-      "!**/fixtures/**"
-    ]
-  },
-  "prettier": {
-    "tabWidth": 2,
-    "semi": true,
-    "singleQuote": true,
-    "printWidth": 80,
-    "proseWrap": "always"
+    "node": ">= 14.0.0"
   }
 }
