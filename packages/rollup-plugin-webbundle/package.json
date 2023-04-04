@@ -11,7 +11,7 @@
   "scripts": {
     "prepack": "npm run build && cp ../../LICENSE ./LICENSE",
     "postpack": "rm -f ./LICENSE",
-    "build": "echo 'Have a happy day!'"
+    "build": "esbuild --bundle --packages=external --format=esm --outfile=lib/index.js src/index.js --platform=node --legal-comments=inline"
   },
   "type": "module",
   "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",

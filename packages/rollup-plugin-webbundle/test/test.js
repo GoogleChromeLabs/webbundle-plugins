@@ -21,14 +21,14 @@ import url from 'url';
 import * as wbn from 'wbn';
 import * as wbnSign from 'wbn-sign';
 
-import webbundle from '../lib/index.js';
+import webbundle from '../src/index.js';
 import {
   coep,
   coop,
   corp,
   csp,
   iwaHeaderDefaults,
-} from '../lib/iwa-headers.js';
+} from '../../shared/iwa-headers.js';
 
 const TEST_ED25519_PRIVATE_KEY = wbnSign.parsePemKey(
   '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'
