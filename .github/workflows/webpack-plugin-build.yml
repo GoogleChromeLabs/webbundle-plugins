@@ -1,4 +1,4 @@
-name: Node.js CI
+name: webbundle-webpack-plugin CI
 
 on: [push, pull_request]
 
