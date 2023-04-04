@@ -191,7 +191,7 @@ Licensed under the Apache-2.0 license.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) file.
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) file.
 
 ## Disclaimer
 
