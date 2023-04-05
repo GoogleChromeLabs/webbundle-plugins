@@ -19,7 +19,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/GoogleChromeLabs/webbundle-webpack-plugin.git",
+    "url": "https://github.com/GoogleChromeLabs/webbundle-plugins.git",
     "directory": "packages/webbundle-webpack-plugin"
   },
   "peerDependencies": {
