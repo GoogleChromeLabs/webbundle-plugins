@@ -30,7 +30,7 @@ import {
   corp,
   csp,
   iwaHeaderDefaults,
-} from '../src/iwa-headers.js';
+} from '../../shared/iwa-headers.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

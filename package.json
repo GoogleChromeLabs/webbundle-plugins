@@ -8,13 +8,15 @@
   },
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/webbundle-webpack-plugin",
+    "packages/rollup-plugin-webbundle"
   ],
   "private": true,
   "license": "Apache-2.0",
   "devDependencies": {
     "ava": "^4.3.3",
-    "prettier": "2.8.0"
+    "prettier": "2.8.0",
+    "esbuild": "^0.17.15"
   },
   "engines": {
     "node": ">= 14.0.0"
