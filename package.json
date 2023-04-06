@@ -3,7 +3,12 @@
   "scripts": {
     "test": "ava",
     "build": "npm run build --workspaces",
-    "lint": "npx prettier --write {**/*,*}.{cjs,js,md,json} --config ./package.json --no-error-on-unmatched-pattern",
+    "lint": "npm run lint:prettier && npm run lint:eslint",
+    "lint:eslint": "eslint --ext .js,.cjs,.mjs .",
+    "lint:prettier": "prettier --check {**/*,*}.{cjs,js,md,json} --config ./package.json --no-error-on-unmatched-pattern",
+    "format": "npm run format:prettier && npm run format:eslint",
+    "format:eslint": "eslint --ext .js,.cjs,.mjs --fix .",
+    "format:prettier": "prettier --write {**/*,*}.{cjs,js,md,json} --config ./package.json --no-error-on-unmatched-pattern",
     "update-snapshots": "ava --update-snapshots"
   },
   "type": "module",
@@ -15,8 +20,11 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "ava": "^4.3.3",
-    "prettier": "2.8.0",
-    "esbuild": "^0.17.15"
+    "esbuild": "^0.17.15",
+    "eslint": "^8.37.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-header": "^3.1.1",
+    "prettier": "2.8.0"
   },
   "engines": {
     "node": ">= 14.0.0"
