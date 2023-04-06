@@ -23,29 +23,29 @@ jobs:
           ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version.node }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version.node }}
+          cache: 'npm'
       - run: npm install -g npm@${{ matrix.node-version.npm }}
-      - run: npm i
+      - run: npm ci
       - run: npm install rollup@${{ matrix.bundler-version.rollup }}
         working-directory: ./packages/rollup-plugin-webbundle
       - run: npm install webpack@${{ matrix.bundler-version.webpack }}
         working-directory: ./packages/webbundle-webpack-plugin
       - run: npm run build
       - run: npm test
-        env:
-          CI: true
 
-  prettier:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: creyD/prettier_action@v4.3
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
         with:
-          prettier_options: --write **/*.{js,ts}
-          only_changed: True
-          dry: True
-          prettier_version: 2.7.1
+          node-version: 18.x
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
