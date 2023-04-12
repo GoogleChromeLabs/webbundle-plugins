@@ -16,8 +16,13 @@
 
 import { KeyObject } from 'crypto';
 import * as z from 'zod';
-import { checkAndAddIwaHeaders, iwaHeaderDefaults } from './iwa-headers';
-import { WebBundleId } from 'wbn-sign';
+// TODO: Figure out why this import gets broken when it gets imported into tests through getValidatedOptionsWithDefaults import.
+import { checkAndAddIwaHeaders, iwaHeaderDefaults } from './iwa-headers.js';
+import {
+  NodeCryptoSigningStrategy,
+  ISigningStrategy,
+  WebBundleId,
+} from 'wbn-sign';
 
 const headersSchema = z.record(z.string());
 
@@ -42,38 +47,73 @@ const nonSigningSchema = baseOptionsSchema.extend({
   primaryURL: z.string().optional(),
 });
 
+const baseIntegrityBlockSignSchema = z.strictObject({
+  isIwa: z.boolean().default(true),
+});
+
+const keyBasedIntegrityBlockSignSchema = baseIntegrityBlockSignSchema
+  .extend({
+    // Unfortunately we cannot use `KeyObject` directly within `instanceof()`,
+    // because its constructor is private.
+    key: z
+      .instanceof(Object)
+      .refine((key): key is KeyObject => key instanceof KeyObject, {
+        message: `Key must be an instance of "KeyObject"`,
+      }),
+  })
+
+  // Use the default NodeCryptoSigningStrategy strategy instead of key.
+  .transform((ibSignOpts) => {
+    return {
+      isIwa: ibSignOpts.isIwa,
+      strategy: new NodeCryptoSigningStrategy(ibSignOpts.key),
+    };
+  });
+
+// Type guard to check that `strategy` implements `ISigningStrategy` interface.
+const isISigningStrategy = (
+  strategy: unknown
+): strategy is ISigningStrategy => {
+  return (
+    typeof (strategy as ISigningStrategy).getPublicKey === 'function' ||
+    typeof (strategy as ISigningStrategy).sign === 'function'
+  );
+};
+
+const strategyBasedIntegrityBlockSignSchema =
+  baseIntegrityBlockSignSchema.extend({
+    strategy: z
+      .instanceof(Object)
+      .refine((ss): ss is ISigningStrategy => isISigningStrategy(ss), {
+        message: `Strategy must implement "ISigningStrategy"`,
+      }),
+  });
+
 const signingSchema = baseOptionsSchema
   .extend({
-    integrityBlockSign: z.strictObject({
-      // Unfortunately we cannot use `KeyObject` directly within `instanceof()`,
-      // because its constructor is private.
-      key: z
-        .instanceof(Object)
-        .refine((key): key is KeyObject => key instanceof KeyObject, {
-          message: `Key must be an instance of "KeyObject"`,
-        }),
-      isIwa: z.boolean().default(true),
-    }),
+    integrityBlockSign: keyBasedIntegrityBlockSignSchema.or(
+      strategyBasedIntegrityBlockSignSchema
+    ),
   })
 
   // Check that `baseURL` is either not set, or set to the expected origin based
   // on the private key.
   .refine(
-    (opts) => {
+    async (opts) => {
+      const publicKey = await opts.integrityBlockSign.strategy.getPublicKey();
       const expectedOrigin = new WebBundleId(
-        opts.integrityBlockSign.key
+        publicKey
       ).serializeWithIsolatedWebAppOrigin();
 
-      return opts.baseURL === '' || opts.baseURL === expectedOrigin;
+      const baseUrlOk = opts.baseURL === '' || opts.baseURL === expectedOrigin;
+      // Error message parameter doesn't support async so printing the value
+      // already here if it's invalid.
+      if (!baseUrlOk) console.log(`Expected base URL: ${expectedOrigin}.`);
+      return baseUrlOk;
     },
-
     (opts) => {
-      const expectedOrigin = new WebBundleId(
-        opts.integrityBlockSign.key
-      ).serializeWithIsolatedWebAppOrigin();
-
       return {
-        message: `The provided "baseURL" option (${opts.baseURL}) does not match the expected base URL (${expectedOrigin}), which is derived from the provided private key`,
+        message: `The provided "baseURL" option (${opts.baseURL}) does not match the expected base URL derived from the public key.`,
       };
     }
   )
@@ -106,7 +146,7 @@ const signingSchema = baseOptionsSchema
 
 const optionsSchema = z.union([nonSigningSchema, signingSchema]);
 
-export const getValidatedOptionsWithDefaults = optionsSchema.parse;
+export const getValidatedOptionsWithDefaults = optionsSchema.parseAsync;
 
 export type PluginOptions = z.input<typeof optionsSchema>;
 

@@ -30,6 +30,7 @@ import {
   csp,
   iwaHeaderDefaults,
 } from '../../shared/lib/iwa-headers.js';
+import { getValidatedOptionsWithDefaults } from '../../shared/lib/types.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -119,24 +120,35 @@ test('relative', async (t) => {
 });
 
 test('integrityBlockSign', async (t) => {
-  const { memfs } = await run({
-    baseURL: TEST_IWA_BASE_URL,
-    output: 'example.swbn',
-    integrityBlockSign: {
+  const testCases = [
+    // With default signer.
+    {
       key: TEST_ED25519_PRIVATE_KEY,
     },
-  });
-  t.deepEqual(memfs.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
+    // With signer option specified.
+    {
+      strategy: new wbnSign.NodeCryptoSigningStrategy(TEST_ED25519_PRIVATE_KEY),
+    },
+  ];
+  for (const testCase of testCases) {
+    const { memfs } = await run({
+      baseURL: TEST_IWA_BASE_URL,
+      output: 'example.swbn',
+      integrityBlockSign: testCase,
+    });
+    t.deepEqual(memfs.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
 
-  const swbnFile = memfs.readFileSync('/out/example.swbn');
-  const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
-  t.truthy(wbnLength < swbnFile.length);
+    const swbnFile = memfs.readFileSync('/out/example.swbn');
+    const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
+    t.truthy(wbnLength < swbnFile.length);
 
-  const { signedWebBundle } = new wbnSign.IntegrityBlockSigner(
-    swbnFile.slice(-wbnLength),
-    { key: TEST_ED25519_PRIVATE_KEY }
-  ).sign();
-  t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
+    const { signedWebBundle } = await new wbnSign.IntegrityBlockSigner(
+      swbnFile.slice(-wbnLength),
+      new wbnSign.NodeCryptoSigningStrategy(TEST_ED25519_PRIVATE_KEY)
+    ).sign();
+
+    t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
+  }
 });
 
 test('headerOverride - IWA with good headers', async (t) => {
@@ -228,7 +240,7 @@ test('headerOverride - IWA with bad headers', async (t) => {
     for (const isIwaTestCase of [undefined, true]) {
       await t.throwsAsync(
         async () => {
-          await run({
+          await getValidatedOptionsWithDefaults({
             baseURL: TEST_IWA_BASE_URL,
             output: 'example.swbn',
             integrityBlockSign: {
@@ -302,4 +314,14 @@ test("headerOverride - non-IWA doesn't enforce IWA headers", async (t) => {
       }
     }
   }
+});
+
+test("integrityBlockSign with undefined baseURL doesn't fail", async (t) => {
+  const { memfs } = await run({
+    output: 'example.swbn',
+    integrityBlockSign: {
+      strategy: new wbnSign.NodeCryptoSigningStrategy(TEST_ED25519_PRIVATE_KEY),
+    },
+  });
+  t.deepEqual(memfs.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
 });

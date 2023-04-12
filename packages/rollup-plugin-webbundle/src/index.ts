@@ -39,13 +39,13 @@ type EnforcedPlugin = Plugin & { enforce: 'post' | 'pre' | null };
 export default function wbnOutputPlugin(
   rawOpts: PluginOptions
 ): EnforcedPlugin {
-  const opts = getValidatedOptionsWithDefaults(rawOpts);
-
   return {
     name: 'wbn-output-plugin',
     enforce: 'post',
 
     async generateBundle(_: OutputOptions, bundle): Promise<void> {
+      const opts = await getValidatedOptionsWithDefaults(rawOpts);
+
       const builder = new BundleBuilder(opts.formatVersion);
       if ('primaryURL' in opts && opts.primaryURL) {
         builder.setPrimaryURL(opts.primaryURL);
@@ -75,7 +75,7 @@ export default function wbnOutputPlugin(
 
       let webBundle = builder.createBundle();
       if ('integrityBlockSign' in opts) {
-        webBundle = getSignedWebBundle(webBundle, opts, infoLogger);
+        webBundle = await getSignedWebBundle(webBundle, opts, infoLogger);
       }
 
       this.emitFile({

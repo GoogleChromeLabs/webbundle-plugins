@@ -28,6 +28,7 @@ import {
   csp,
   iwaHeaderDefaults,
 } from '../../shared/lib/iwa-headers.js';
+import { getValidatedOptionsWithDefaults } from '../../shared/lib/types.js';
 
 const TEST_ED25519_PRIVATE_KEY = wbnSign.parsePemKey(
   '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'
@@ -169,32 +170,43 @@ test('relative', async (t) => {
 test('integrityBlockSign', async (t) => {
   const outputFileName = 'out.swbn';
 
-  const bundle = await rollup.rollup({
-    input: 'fixtures/index.js',
-    plugins: [
-      webbundle({
-        baseURL: TEST_IWA_BASE_URL,
-        output: outputFileName,
-        integrityBlockSign: {
-          key: TEST_ED25519_PRIVATE_KEY,
-        },
-      }),
-    ],
-  });
-  const { output } = await bundle.generate({ format: 'esm' });
-  const keys = Object.keys(output);
-  t.is(keys.length, 1);
-  t.is(output[keys[0]].fileName, outputFileName);
+  const testCases = [
+    // With default signer.
+    {
+      key: TEST_ED25519_PRIVATE_KEY,
+    },
+    // With signer option specified.
+    {
+      strategy: new wbnSign.NodeCryptoSigningStrategy(TEST_ED25519_PRIVATE_KEY),
+    },
+  ];
+  for (const testCase of testCases) {
+    const bundle = await rollup.rollup({
+      input: 'fixtures/index.js',
+      plugins: [
+        webbundle({
+          baseURL: TEST_IWA_BASE_URL,
+          output: outputFileName,
+          integrityBlockSign: testCase,
+        }),
+      ],
+    });
+    const { output } = await bundle.generate({ format: 'esm' });
+    const keys = Object.keys(output);
+    t.is(keys.length, 1);
+    t.is(output[keys[0]].fileName, outputFileName);
 
-  const swbnFile = output[keys[0]].source;
-  const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
-  t.truthy(wbnLength < swbnFile.length);
-  const { signedWebBundle } = new wbnSign.IntegrityBlockSigner(
-    swbnFile.slice(-wbnLength),
-    { key: TEST_ED25519_PRIVATE_KEY }
-  ).sign();
+    const swbnFile = output[keys[0]].source;
+    const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
+    t.truthy(wbnLength < swbnFile.length);
 
-  t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
+    const { signedWebBundle } = await new wbnSign.IntegrityBlockSigner(
+      swbnFile.slice(-wbnLength),
+      new wbnSign.NodeCryptoSigningStrategy(TEST_ED25519_PRIVATE_KEY)
+    ).sign();
+
+    t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
+  }
 });
 
 test('headerOverride - IWA with good headers', async (t) => {
@@ -293,6 +305,7 @@ test('headerOverride - IWA with good headers', async (t) => {
   }
 });
 
+// TODO: Move this common test outside of here.
 test('headerOverride - IWA with bad headers', async (t) => {
   const badHeadersTestCase = [
     { 'cross-origin-embedder-policy': 'unsafe-none' },
@@ -304,7 +317,7 @@ test('headerOverride - IWA with bad headers', async (t) => {
     for (const isIwaTestCase of [undefined, true]) {
       await t.throwsAsync(
         async () => {
-          await rollup.rollup({
+          await getValidatedOptionsWithDefaults({
             input: 'fixtures/index.js',
             plugins: [
               webbundle({
@@ -393,4 +406,26 @@ test("headerOverride - non-IWA doesn't enforce IWA headers", async (t) => {
       }
     }
   }
+});
+
+test("integrityBlockSign with undefined baseURL doesn't fail", async (t) => {
+  const outputFileName = 'out.swbn';
+
+  const bundle = await rollup.rollup({
+    input: 'fixtures/index.js',
+    plugins: [
+      webbundle({
+        output: outputFileName,
+        integrityBlockSign: {
+          strategy: new wbnSign.NodeCryptoSigningStrategy(
+            TEST_ED25519_PRIVATE_KEY
+          ),
+        },
+      }),
+    ],
+  });
+  const { output } = await bundle.generate({ format: 'esm' });
+  const keys = Object.keys(output);
+  t.is(keys.length, 1);
+  t.is(output[keys[0]].fileName, outputFileName);
 });

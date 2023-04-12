@@ -24,7 +24,6 @@ import {
 import {
   getValidatedOptionsWithDefaults,
   PluginOptions,
-  ValidPluginOptions,
 } from '../../shared/types';
 
 const PLUGIN_NAME = 'webbundle-webpack-plugin';
@@ -35,14 +34,11 @@ function isWebpackMajorV4(): boolean {
 }
 
 export class WebBundlePlugin implements WebpackPluginInstance {
-  private validOpts: ValidPluginOptions;
+  constructor(private rawOpts: PluginOptions) {}
 
-  constructor(rawOpts: PluginOptions) {
-    this.validOpts = getValidatedOptionsWithDefaults(rawOpts);
-  }
+  process = async (compilation: Compilation) => {
+    const opts = await getValidatedOptionsWithDefaults(this.rawOpts);
 
-  process = (compilation: Compilation) => {
-    const opts = this.validOpts;
     const builder = new BundleBuilder(opts.formatVersion);
     if ('primaryURL' in opts && opts.primaryURL) {
       builder.setPrimaryURL(opts.primaryURL);
@@ -80,7 +76,7 @@ export class WebBundlePlugin implements WebpackPluginInstance {
 
     let webBundle = builder.createBundle();
     if ('integrityBlockSign' in opts) {
-      webBundle = getSignedWebBundle(webBundle, opts, infoLogger);
+      webBundle = await getSignedWebBundle(webBundle, opts, infoLogger);
     }
 
     if (isWebpackMajorV4()) {
