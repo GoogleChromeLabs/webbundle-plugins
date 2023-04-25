@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-// This is just a CommonJS wrapper for the default export to not to introduce a
-// breaking change on how WebBundlePlugin is imported.
-// For context, see:
-// https://github.com/evanw/esbuild/issues/532#issuecomment-1019392638
-// TODO: Get rid of this together with the next other breaking change.
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { WebBundlePlugin } = require('./lib/index.cjs');
-module.exports = WebBundlePlugin;
+// These must match with the types in `wbn`.
+// github.com/WICG/webpackage/blob/main/js/bundle/src/constants.ts
+const B1 = 'b1';
+const B2 = 'b2';
+const APPROVED_VERSIONS = [B1, B2] as const;
+export type FormatVersion = typeof APPROVED_VERSIONS[number];

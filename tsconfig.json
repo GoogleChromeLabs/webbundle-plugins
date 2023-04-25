@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "lib": ["es2020"],
+    "module": "es2020",
+    "target": "es2020",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "declaration": true,
+    "newLine": "lf",
+    "outDir": "packages/lib-for-tests",
+    "noImplicitReturns": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "packages/rollup-plugin-webbundle/src/**/*",
+    "packages/webbundle-webpack-plugin/src/**/*",
+    "packages/shared/**/*"
+  ],
+  "exclude": ["node_modules", "lib", "lib-for-tests"]
+}

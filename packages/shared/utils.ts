@@ -17,19 +17,21 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import mime from 'mime';
-import { combineHeadersForUrl } from 'wbn';
+import { KeyObject } from 'crypto';
+import { combineHeadersForUrl, BundleBuilder } from 'wbn';
 import { IntegrityBlockSigner, WebBundleId } from 'wbn-sign';
 import { checkAndAddIwaHeaders, maybeSetIwaDefaults } from './iwa-headers.js';
+import { PluginOptions } from './types.js';
 
 // If the file name is 'index.html', create an entry for both baseURL/dir/
 // and baseURL/dir/index.html which redirects to the aforementioned. Otherwise
 // just for the asset itself. This matches the behavior of gen-bundle.
 export function addAsset(
-  builder,
-  baseURL,
-  relativeAssetPath, // Asset's path relative to app's base dir. E.g. sub-dir/helloworld.js
-  assetContentBuffer,
-  pluginOptions
+  builder: BundleBuilder,
+  baseURL: string,
+  relativeAssetPath: string, // Asset's path relative to app's base dir. E.g. sub-dir/helloworld.js
+  assetContentBuffer: Uint8Array | string,
+  pluginOptions: PluginOptions
 ) {
   const parsedAssetPath = path.parse(relativeAssetPath);
   const isIndexHtmlFile = parsedAssetPath.base === 'index.html';
@@ -77,10 +79,10 @@ export function addAsset(
 }
 
 export function addFilesRecursively(
-  builder,
-  baseURL,
-  dir,
-  pluginOptions,
+  builder: BundleBuilder,
+  baseURL: string,
+  dir: string,
+  pluginOptions: PluginOptions,
   recPath = ''
 ) {
   if (baseURL !== '' && !baseURL.endsWith('/')) {
@@ -115,7 +117,11 @@ export function addFilesRecursively(
   }
 }
 
-function validateIntegrityBlockOptions(opts) {
+function validateIntegrityBlockOptions(opts: PluginOptions) {
+  if (!opts.integrityBlockSign) {
+    return;
+  }
+
   maybeSetIwaDefaults(opts);
 
   if (opts.primaryURL !== undefined) {
@@ -142,16 +148,18 @@ function validateIntegrityBlockOptions(opts) {
   }
 }
 
-export function validateOptions(opts) {
+export function validateOptions(opts: PluginOptions) {
   if (opts.baseURL !== '' && !opts.baseURL.endsWith('/')) {
     throw new Error('Non-empty baseURL must end with "/".');
   }
-  if (opts.integrityBlockSign) {
-    validateIntegrityBlockOptions(opts);
-  }
+  validateIntegrityBlockOptions(opts);
 }
 
-export function maybeSignWebBundle(webBundle, opts, loggingCallback) {
+export function maybeSignWebBundle(
+  webBundle: Uint8Array,
+  opts: PluginOptions,
+  loggingCallback: (key: KeyObject) => void
+): Uint8Array {
   if (!opts.integrityBlockSign) {
     return webBundle;
   }
@@ -160,7 +168,7 @@ export function maybeSignWebBundle(webBundle, opts, loggingCallback) {
     key: opts.integrityBlockSign.key,
   }).sign();
 
-  loggingCallback();
+  loggingCallback(opts.integrityBlockSign.key);
 
   return signedWebBundle;
 }

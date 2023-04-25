@@ -16,12 +16,15 @@
 
 import { BundleBuilder } from 'wbn';
 import { WebBundleId } from 'wbn-sign';
+import { Plugin, OutputOptions } from 'rollup';
+import { KeyObject } from 'crypto';
 import {
   addAsset,
   addFilesRecursively,
   validateOptions,
   maybeSignWebBundle,
 } from '../../shared/utils.js';
+import { PluginOptions } from '../../shared/types.js';
 
 const defaults = {
   output: 'out.wbn',
@@ -29,11 +32,16 @@ const defaults = {
 };
 
 const consoleLogColor = { green: '\x1b[32m', reset: '\x1b[0m' };
-function infoLogger(text) {
+function infoLogger(text: string): void {
   console.log(`${consoleLogColor.green}${text}${consoleLogColor.reset}\n`);
 }
 
-export default function wbnOutputPlugin(opts) {
+// TODO(sonkkeli): Probably this depends on the Rollup version. Figure out how
+// this should be refactored.
+// https://rollupjs.org/plugin-development/#build-hooks
+type EnforcedPlugin = Plugin & { enforce: 'post' | 'pre' | null };
+
+export default function wbnOutputPlugin(opts: PluginOptions): EnforcedPlugin {
   opts = Object.assign({}, defaults, opts);
   validateOptions(opts);
 
@@ -41,11 +49,12 @@ export default function wbnOutputPlugin(opts) {
     name: 'wbn-output-plugin',
     enforce: 'post',
 
-    async generateBundle(_, bundle) {
+    async generateBundle(_: OutputOptions, bundle): Promise<void> {
       const builder = new BundleBuilder(opts.formatVersion);
       if (opts.primaryURL) {
         builder.setPrimaryURL(opts.primaryURL);
       }
+
       if (opts.static) {
         addFilesRecursively(
           builder,
@@ -55,7 +64,7 @@ export default function wbnOutputPlugin(opts) {
         );
       }
 
-      for (let name of Object.keys(bundle)) {
+      for (const name of Object.keys(bundle)) {
         const asset = bundle[name];
         const content = asset.type === 'asset' ? asset.source : asset.code;
         addAsset(
@@ -68,8 +77,10 @@ export default function wbnOutputPlugin(opts) {
         delete bundle[name];
       }
 
-      const webBundle = maybeSignWebBundle(builder.createBundle(), opts, () =>
-        infoLogger(`${new WebBundleId(opts.integrityBlockSign.key)}`)
+      const webBundle = maybeSignWebBundle(
+        builder.createBundle(),
+        opts,
+        (key: KeyObject) => infoLogger(`${new WebBundleId(key)}`)
       );
 
       this.emitFile({

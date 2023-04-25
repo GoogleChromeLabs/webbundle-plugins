@@ -1,14 +1,15 @@
 {
   "name": "webbundle-plugins",
   "scripts": {
-    "test": "ava",
+    "test": "rm -rf packages/lib-for-tests/ && tsc && ava; rm -rf packages/lib-for-tests/",
     "build": "npm run build --workspaces",
+    "pack": "npm pack --workspaces",
     "lint": "npm run lint:prettier && npm run lint:eslint",
-    "lint:eslint": "eslint --ext .js,.cjs,.mjs .",
-    "lint:prettier": "prettier --check {**/*,*}.{cjs,js,md,json} --config ./package.json --no-error-on-unmatched-pattern",
+    "lint:eslint": "eslint --ext .js,.ts,.cjs,.mjs .",
+    "lint:prettier": "prettier --check {**/*,*}.{cjs,js,ts,md,json} --config ./package.json --no-error-on-unmatched-pattern",
     "format": "npm run format:prettier && npm run format:eslint",
-    "format:eslint": "eslint --ext .js,.cjs,.mjs --fix .",
-    "format:prettier": "prettier --write {**/*,*}.{cjs,js,md,json} --config ./package.json --no-error-on-unmatched-pattern",
+    "format:eslint": "eslint --ext .js,.ts,.cjs,.mjs --fix .",
+    "format:prettier": "prettier --write {**/*,*}.{cjs,js,ts,md,json} --config ./package.json --no-error-on-unmatched-pattern",
     "update-snapshots": "ava --update-snapshots"
   },
   "type": "module",
@@ -19,12 +20,17 @@
   "private": true,
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/mime": "^3.0.1",
+    "@types/node": "^18.16.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.1",
+    "@typescript-eslint/parser": "^5.59.1",
     "ava": "^4.3.3",
     "esbuild": "^0.17.15",
     "eslint": "^8.37.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-header": "^3.1.1",
-    "prettier": "2.8.0"
+    "prettier": "2.8.0",
+    "typescript": "^5.0.4"
   },
   "engines": {
     "node": ">= 14.0.0"

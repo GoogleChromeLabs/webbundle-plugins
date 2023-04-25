@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import webpack from 'webpack';
+import webpack, { Compiler, Compilation, WebpackPluginInstance } from 'webpack';
+import { KeyObject } from 'crypto';
 import { BundleBuilder } from 'wbn';
 import { WebBundleId } from 'wbn-sign';
 import {
@@ -23,6 +24,7 @@ import {
   validateOptions,
   maybeSignWebBundle,
 } from '../../shared/utils.js';
+import { PluginOptions } from '../../shared/types.js';
 
 const PLUGIN_NAME = 'webbundle-webpack-plugin';
 
@@ -33,17 +35,19 @@ const defaults = {
 };
 
 // Returns if the semantic version number of Webpack is 4.
-function isWebpackMajorV4() {
+function isWebpackMajorV4(): boolean {
   return webpack.version.startsWith('4.');
 }
 
-export class WebBundlePlugin {
-  constructor(opts) {
+export class WebBundlePlugin implements WebpackPluginInstance {
+  private opts: PluginOptions;
+
+  constructor(opts: PluginOptions) {
     this.opts = Object.assign({}, defaults, opts);
     validateOptions(this.opts);
   }
 
-  process = (compilation) => {
+  process = (compilation: Compilation) => {
     const opts = this.opts;
     const builder = new BundleBuilder(opts.formatVersion);
     if (opts.primaryURL) {
@@ -77,14 +81,17 @@ export class WebBundlePlugin {
     // are no longer supported.
     const infoLogger =
       typeof compilation.getLogger === 'function'
-        ? (str) => compilation.getLogger(PLUGIN_NAME).info(str)
-        : (str) => console.log(str);
+        ? (str: string) => compilation.getLogger(PLUGIN_NAME).info(str)
+        : (str: string) => console.log(str);
 
-    const webBundle = maybeSignWebBundle(builder.createBundle(), opts, () =>
-      infoLogger(`${new WebBundleId(opts.integrityBlockSign.key)}`)
+    const webBundle = maybeSignWebBundle(
+      builder.createBundle(),
+      opts,
+      (key: KeyObject) => infoLogger(`${new WebBundleId(key)}`)
     );
 
     if (isWebpackMajorV4()) {
+      // @ts-expect-error Missing properties don't exist on webpack v4.
       compilation.assets[opts.output] = {
         source: () => Buffer.from(webBundle),
         size: () => webBundle.length,
@@ -97,13 +104,13 @@ export class WebBundlePlugin {
     }
   };
 
-  apply = (compiler) => {
+  apply = (compiler: Compiler) => {
     if (isWebpackMajorV4()) {
       compiler.hooks.emit.tap(this.constructor.name, this.process);
     } else {
       compiler.hooks.thisCompilation.tap(
         this.constructor.name,
-        (compilation) => {
+        (compilation: Compilation) => {
           compilation.hooks.processAssets.tap(
             {
               name: this.constructor.name,
