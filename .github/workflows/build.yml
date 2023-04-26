@@ -16,8 +16,8 @@ jobs:
           ]
         bundler-version:
           [
-            { rollup: 1.21.x, webpack: 4.0.x },
-            { rollup: ^1.0.0, webpack: ^4.0.0 },
+            { rollup: 1.21.x, webpack: 4.1.x },
+            { rollup: ^1.0.0, webpack: ^4.0.1 },
             { rollup: ^2.0.0, webpack: 5.0.x },
             { rollup: ^3.0.0, webpack: ^5.0.0 },
           ]
