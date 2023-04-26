@@ -39,7 +39,7 @@ export class WebBundlePlugin {
     validateOptions(this.opts);
   }
 
-  process(compilation) {
+  process = (compilation) => {
     const opts = this.opts;
     const builder = new BundleBuilder(opts.formatVersion);
     if (opts.primaryURL) {
@@ -80,21 +80,24 @@ export class WebBundlePlugin {
       infoLogger(`${new WebBundleId(opts.integrityBlockSign.key)}`)
     );
     compilation.assets[opts.output] = new RawSource(webBundle);
-  }
+  };
 
-  apply(compiler) {
+  apply = (compiler) => {
     if (webpack.version.startsWith('4.')) {
-      compiler.hooks.emit.tap('WebBundlePlugin', this.process.bind(this));
+      compiler.hooks.emit.tap(this.constructor.name, this.process);
     } else {
-      compiler.hooks.thisCompilation.tap('WebBundlePlugin', (compilation) => {
-        compilation.hooks.processAssets.tap(
-          {
-            name: 'WebBundlePlugin',
-            stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
-          },
-          () => this.process(compilation)
-        );
-      });
+      compiler.hooks.thisCompilation.tap(
+        this.constructor.name,
+        (compilation) => {
+          compilation.hooks.processAssets.tap(
+            {
+              name: this.constructor.name,
+              stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+            },
+            () => this.process(compilation)
+          );
+        }
+      );
     }
-  }
+  };
 }
