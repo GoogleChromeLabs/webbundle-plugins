@@ -14,37 +14,39 @@
  * limitations under the License.
  */
 
-export const coep = Object.freeze({
+import { Headers, PluginOptions } from './types.js';
+
+export const coep: Headers = Object.freeze({
   'cross-origin-embedder-policy': 'require-corp',
 });
-export const coop = Object.freeze({
+export const coop: Headers = Object.freeze({
   'cross-origin-opener-policy': 'same-origin',
 });
-export const corp = Object.freeze({
+export const corp: Headers = Object.freeze({
   'cross-origin-resource-policy': 'same-origin',
 });
 
 export const CSP_HEADER_NAME = 'content-security-policy';
-export const csp = Object.freeze({
+export const csp: Headers = Object.freeze({
   [CSP_HEADER_NAME]:
     "base-uri 'none'; default-src 'self'; object-src 'none'; frame-src 'self' https:; connect-src 'self' https:; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' https: blob: data:; media-src 'self' https: blob: data:; font-src 'self' blob: data:; require-trusted-types-for 'script'; frame-ancestors 'self';",
 });
 
 // These headers must have these exact values for Isolated Web Apps, whereas the
 // CSP header can also be more strict.
-const invariableIwaHeaders = Object.freeze({
+const invariableIwaHeaders: Headers = Object.freeze({
   ...coep,
   ...coop,
   ...corp,
 });
 
-export const iwaHeaderDefaults = Object.freeze({
+export const iwaHeaderDefaults: Headers = Object.freeze({
   ...csp,
   ...invariableIwaHeaders,
 });
 
-function headerNamesToLowerCase(headers) {
-  const lowerCaseHeaders = {};
+function headerNamesToLowerCase(headers: Headers): Headers {
+  const lowerCaseHeaders: Headers = {};
   for (const [headerName, headerValue] of Object.entries(headers)) {
     lowerCaseHeaders[headerName.toLowerCase()] = headerValue;
   }
@@ -55,7 +57,7 @@ const ifNotIwaMsg =
   "If you are bundling a non-IWA, set `integrityBlockSign: { isIwa: false }` in the plugin's configuration.";
 
 // Checks if the IWA headers are strict enough or adds in case missing.
-export function checkAndAddIwaHeaders(headers) {
+export function checkAndAddIwaHeaders(headers: Headers) {
   const lowerCaseHeaders = headerNamesToLowerCase(headers);
 
   // Add missing IWA headers.
@@ -87,7 +89,11 @@ export function checkAndAddIwaHeaders(headers) {
   // TODO: Parse and check strictness of `Content-Security-Policy`.
 }
 
-export function maybeSetIwaDefaults(opts) {
+export function maybeSetIwaDefaults(opts: PluginOptions) {
+  if (!opts.integrityBlockSign) {
+    return;
+  }
+
   // Note that `undefined` is ignored on purpose.
   if (opts.integrityBlockSign.isIwa === false) {
     return;

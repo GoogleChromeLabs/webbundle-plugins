@@ -46,12 +46,20 @@ jobs:
       - name: Install deps
         run: npm ci
 
+      - name: Uninstall old versions of Webpack
+        run: npm uninstall -D @types/webpack webpack
+        working-directory: ./packages/webbundle-webpack-plugin
+
+      - name: Uninstall old versions of Rollup
+        run: npm uninstall -D rollup
+        working-directory: ./packages/rollup-plugin-webbundle
+
       - name: Install Rollup v${{ matrix.test-case.rollup }}
         run: npm install --save-dev rollup@${{ matrix.test-case.rollup }}
         working-directory: ./packages/rollup-plugin-webbundle
 
       - name: Install Webpack v${{ matrix.test-case.webpack }}
-        run: npm install --save-dev webpack@${{ matrix.test-case.webpack }}
+        run: npm install --save-dev webpack@${{ matrix.test-case.webpack }} @types/webpack
         working-directory: ./packages/webbundle-webpack-plugin
 
       - run: npm run build

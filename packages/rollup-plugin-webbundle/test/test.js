@@ -20,15 +20,14 @@ import * as rollup from 'rollup';
 import url from 'url';
 import * as wbn from 'wbn';
 import * as wbnSign from 'wbn-sign';
-
-import webbundle from '../src/index.js';
+import webbundle from '../lib/index.js';
 import {
   coep,
   coop,
   corp,
   csp,
   iwaHeaderDefaults,
-} from '../../shared/iwa-headers.js';
+} from '../../shared/lib/iwa-headers.js';
 
 const TEST_ED25519_PRIVATE_KEY = wbnSign.parsePemKey(
   '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'

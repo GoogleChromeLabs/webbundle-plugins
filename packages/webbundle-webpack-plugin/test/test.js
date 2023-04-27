@@ -22,15 +22,14 @@ import fs from 'fs';
 import * as path from 'path';
 import * as wbn from 'wbn';
 import * as wbnSign from 'wbn-sign';
-
-import { WebBundlePlugin } from '../src/index.js';
+import { WebBundlePlugin } from '../lib/index.cjs';
 import {
   coep,
   coop,
   corp,
   csp,
   iwaHeaderDefaults,
-} from '../../shared/iwa-headers.js';
+} from '../../shared/lib/iwa-headers.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

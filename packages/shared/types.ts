@@ -14,12 +14,24 @@
  * limitations under the License.
  */
 
-// This is just a CommonJS wrapper for the default export to not to introduce a
-// breaking change on how WebBundlePlugin is imported.
-// For context, see:
-// https://github.com/evanw/esbuild/issues/532#issuecomment-1019392638
-// TODO: Get rid of this together with the next other breaking change.
+import { KeyObject } from 'crypto';
+import { FormatVersion } from './wbn-types.js';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { WebBundlePlugin } = require('./lib/index.cjs');
-module.exports = WebBundlePlugin;
+export interface Headers {
+  [key: string]: string;
+}
+
+interface IntegrityBlockSignOptions {
+  key: KeyObject;
+  isIwa?: boolean;
+}
+
+export interface PluginOptions {
+  baseURL: string;
+  primaryURL?: string;
+  static: { dir: string; baseURL?: string };
+  output: string;
+  formatVersion: FormatVersion;
+  integrityBlockSign?: IntegrityBlockSignOptions;
+  headerOverride?: (() => Headers) | Headers;
+}

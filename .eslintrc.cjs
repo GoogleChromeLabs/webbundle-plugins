@@ -19,10 +19,14 @@ module.exports = {
     es2021: true,
     node: true,
   },
-  ignorePatterns: ['**/lib/**'],
-  plugins: ['header'],
-  extends: ['eslint:recommended', 'prettier'],
+  plugins: ['@typescript-eslint', 'header'],
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'prettier',
+  ],
   overrides: [],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
