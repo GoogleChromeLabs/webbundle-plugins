@@ -2,4 +2,3 @@ tsconfig.json
 .github
 test/
 src/
-lib-for-tests/

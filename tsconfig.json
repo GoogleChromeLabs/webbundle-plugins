@@ -8,14 +8,11 @@
     "strict": true,
     "declaration": true,
     "newLine": "lf",
-    "outDir": "packages/lib-for-tests",
+    "outDir": "packages/shared/lib",
     "noImplicitReturns": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowJs": true
   },
-  "include": [
-    "packages/rollup-plugin-webbundle/src/**/*",
-    "packages/webbundle-webpack-plugin/src/**/*",
-    "packages/shared/**/*"
-  ],
-  "exclude": ["node_modules", "lib", "lib-for-tests"]
+  "include": ["packages/shared/**/*"],
+  "exclude": ["node_modules", "lib"]
 }

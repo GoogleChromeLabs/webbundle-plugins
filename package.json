@@ -1,7 +1,7 @@
 {
   "name": "webbundle-plugins",
   "scripts": {
-    "test": "rm -rf packages/lib-for-tests/ && tsc && ava; rm -rf packages/lib-for-tests/",
+    "test": "rm -rf packages/shared/lib/ && npm run build && tsc && ava; rm -rf packages/shared/lib/",
     "build": "npm run build --workspaces",
     "pack": "npm pack --workspaces",
     "lint": "npm run lint:prettier && npm run lint:eslint",
