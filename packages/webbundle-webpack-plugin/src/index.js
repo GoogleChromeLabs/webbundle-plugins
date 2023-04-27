@@ -15,7 +15,6 @@
  */
 
 import webpack from 'webpack';
-import { RawSource } from 'webpack-sources';
 import { BundleBuilder } from 'wbn';
 import { WebBundleId } from 'wbn-sign';
 import {
@@ -32,6 +31,11 @@ const defaults = {
   output: 'out.wbn',
   baseURL: '',
 };
+
+// Returns if the semantic version number of Webpack is 4.
+function isWebpackMajorV4() {
+  return webpack.version.startsWith('4.');
+}
 
 export class WebBundlePlugin {
   constructor(opts) {
@@ -79,11 +83,22 @@ export class WebBundlePlugin {
     const webBundle = maybeSignWebBundle(builder.createBundle(), opts, () =>
       infoLogger(`${new WebBundleId(opts.integrityBlockSign.key)}`)
     );
-    compilation.assets[opts.output] = new RawSource(webBundle);
+
+    if (isWebpackMajorV4()) {
+      compilation.assets[opts.output] = {
+        source: () => Buffer.from(webBundle),
+        size: () => webBundle.length,
+      };
+    } else {
+      compilation.assets[opts.output] = new webpack.sources.RawSource(
+        Buffer.from(webBundle),
+        /*convertToString=*/ false
+      );
+    }
   };
 
   apply = (compiler) => {
-    if (webpack.version.startsWith('4.')) {
+    if (isWebpackMajorV4()) {
       compiler.hooks.emit.tap(this.constructor.name, this.process);
     } else {
       compiler.hooks.thisCompilation.tap(
