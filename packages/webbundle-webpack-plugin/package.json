@@ -23,13 +23,12 @@
     "directory": "packages/webbundle-webpack-plugin"
   },
   "peerDependencies": {
-    "webpack": ">=4.0.0 <6.0.0"
+    "webpack": ">=4.0.1 <6.0.0"
   },
   "dependencies": {
     "mime": "^2.4.4",
     "wbn": "0.0.9",
-    "wbn-sign": "0.0.1",
-    "webpack-sources": "^1.4.3"
+    "wbn-sign": "0.0.1"
   },
   "devDependencies": {
     "esbuild": "^0.17.15",

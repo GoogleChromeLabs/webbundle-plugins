@@ -5,38 +5,57 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
 
     strategy:
+      fail-fast: false
       matrix:
-        node-version:
-          [
-            { node: 14.x, npm: 7.x },
-            { node: 16.x, npm: 7.x },
-            { node: 18.x, npm: 8.x },
-          ]
-        bundler-version:
-          [
-            { rollup: 1.21.x, webpack: 4.1.x },
-            { rollup: ^1.0.0, webpack: ^4.0.1 },
-            { rollup: ^2.0.0, webpack: 5.0.x },
-            { rollup: ^3.0.0, webpack: ^5.0.0 },
+        test-case: [
+            # Lowest supported versions are 1.21.0 for Rollup and 4.0.1 for Webpack.
+            { node: 14.x, rollup: 1.21.0, webpack: 4.0.1 },
+            { node: 14.x, rollup: ^1.21.0, webpack: ^4.0.1 },
+            { node: 14.x, rollup: ^2.0.0, webpack: 5.0.x },
+            { node: 14.x, rollup: ^3.0.0, webpack: ^5.0.0 },
+
+            { node: 16.x, rollup: 1.21.x, webpack: 4.1.x },
+            { node: 16.x, rollup: ^1.21.0, webpack: ^4.0.1 },
+            { node: 16.x, rollup: ^2.0.0, webpack: 5.0.x },
+            { node: 16.x, rollup: ^3.0.0, webpack: ^5.0.0 },
+
+            # Node 18 only works with Webpack version ^5.61.x.
+            { node: 18.x, rollup: 1.21.x, webpack: 5.61.x },
+            { node: 18.x, rollup: ^1.21.0, webpack: ^5.0.0 },
+            { node: 18.x, rollup: ^2.0.0, webpack: 5.61.x },
+            { node: 18.x, rollup: ^3.0.0, webpack: ^5.0.0 },
           ]
 
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version.node }}
+
+      - name: Use Node.js ${{ matrix.test-case.node }}
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version.node }}
+          node-version: ${{ matrix.test-case.node }}
           cache: 'npm'
-      - run: npm install -g npm@${{ matrix.node-version.npm }}
-      - run: npm ci
-      - run: npm install rollup@${{ matrix.bundler-version.rollup }}
+
+      # Underlying wbn-sign requires to use npm v8+
+      - run: npm install -g npm@8
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Install Rollup v${{ matrix.test-case.rollup }}
+        run: npm install --save-dev rollup@${{ matrix.test-case.rollup }}
         working-directory: ./packages/rollup-plugin-webbundle
-      - run: npm install webpack@${{ matrix.bundler-version.webpack }}
+
+      - name: Install Webpack v${{ matrix.test-case.webpack }}
+        run: npm install --save-dev webpack@${{ matrix.test-case.webpack }}
         working-directory: ./packages/webbundle-webpack-plugin
+
       - run: npm run build
-      - run: npm test
+      - run: npm run test
 
   lint:
     runs-on: ubuntu-latest
