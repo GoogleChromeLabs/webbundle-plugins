@@ -5,19 +5,15 @@
     "target": "es2020",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "isolatedModules": true,
     "strict": true,
     "declaration": true,
     "newLine": "lf",
-    "outDir": "packages/shared/lib",
     "noImplicitReturns": true,
     "skipLibCheck": true,
     "allowJs": true,
     "noEmit": true
   },
-  "include": [
-    "packages/shared/**/*",
-    "packages/webbundle-webpack-plugin/**/*",
-    "packages/rollup-plugin-webbundle/**/*"
-  ],
-  "exclude": ["node_modules", "lib"]
+  "include": ["packages/**/*"],
+  "exclude": ["**/node_modules", "**/lib"]
 }

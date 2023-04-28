@@ -15,7 +15,7 @@
  */
 
 import { KeyObject } from 'crypto';
-import { FormatVersion } from './wbn-types.js';
+import { FormatVersion } from './wbn-types';
 
 export interface Headers {
   [key: string]: string;

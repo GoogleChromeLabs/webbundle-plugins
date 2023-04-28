@@ -20,8 +20,8 @@ import mime from 'mime';
 import { KeyObject } from 'crypto';
 import { combineHeadersForUrl, BundleBuilder } from 'wbn';
 import { IntegrityBlockSigner, WebBundleId } from 'wbn-sign';
-import { checkAndAddIwaHeaders, maybeSetIwaDefaults } from './iwa-headers.js';
-import { PluginOptions } from './types.js';
+import { checkAndAddIwaHeaders, maybeSetIwaDefaults } from './iwa-headers';
+import { PluginOptions } from './types';
 
 // If the file name is 'index.html', create an entry for both baseURL/dir/
 // and baseURL/dir/index.html which redirects to the aforementioned. Otherwise

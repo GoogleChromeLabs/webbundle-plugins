@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Headers, PluginOptions } from './types.js';
+import { Headers, PluginOptions } from './types';
 
 export const coep: Headers = Object.freeze({
   'cross-origin-embedder-policy': 'require-corp',
