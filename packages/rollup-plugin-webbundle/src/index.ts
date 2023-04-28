@@ -23,8 +23,8 @@ import {
   addFilesRecursively,
   validateOptions,
   maybeSignWebBundle,
-} from '../../shared/utils.js';
-import { PluginOptions } from '../../shared/types.js';
+} from '../../shared/utils';
+import { PluginOptions } from '../../shared/types';
 
 const defaults = {
   output: 'out.wbn',
