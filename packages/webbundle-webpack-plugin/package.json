@@ -13,7 +13,7 @@
   "scripts": {
     "prepack": "npm run build && cp ../../LICENSE ./LICENSE",
     "postpack": "rm -f ./LICENSE",
-    "build": "rm -rf lib && esbuild --bundle --packages=external --format=cjs --outfile=lib/index.cjs src/index.ts --platform=node --legal-comments=inline --sourcemap"
+    "build": "rm -rf lib && esbuild --bundle --packages=external --format=cjs --outfile=lib/index.cjs src/index.ts --platform=node --legal-comments=inline --sourcemap --keep-names"
   },
   "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",
   "license": "Apache-2.0",
