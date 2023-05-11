@@ -15,21 +15,16 @@
  */
 
 import { BundleBuilder } from 'wbn';
-import { WebBundleId } from 'wbn-sign';
 import { Plugin, OutputOptions } from 'rollup';
-import { KeyObject } from 'crypto';
 import {
   addAsset,
   addFilesRecursively,
-  validateOptions,
-  maybeSignWebBundle,
+  getSignedWebBundle,
 } from '../../shared/utils';
-import { PluginOptions } from '../../shared/types';
-
-const defaults = {
-  output: 'out.wbn',
-  baseURL: '',
-};
+import {
+  getValidatedOptionsWithDefaults,
+  PluginOptions,
+} from '../../shared/types';
 
 const consoleLogColor = { green: '\x1b[32m', reset: '\x1b[0m' };
 function infoLogger(text: string): void {
@@ -41,9 +36,10 @@ function infoLogger(text: string): void {
 // https://rollupjs.org/plugin-development/#build-hooks
 type EnforcedPlugin = Plugin & { enforce: 'post' | 'pre' | null };
 
-export default function wbnOutputPlugin(opts: PluginOptions): EnforcedPlugin {
-  opts = Object.assign({}, defaults, opts);
-  validateOptions(opts);
+export default function wbnOutputPlugin(
+  rawOpts: PluginOptions
+): EnforcedPlugin {
+  const opts = getValidatedOptionsWithDefaults(rawOpts);
 
   return {
     name: 'wbn-output-plugin',
@@ -51,14 +47,14 @@ export default function wbnOutputPlugin(opts: PluginOptions): EnforcedPlugin {
 
     async generateBundle(_: OutputOptions, bundle): Promise<void> {
       const builder = new BundleBuilder(opts.formatVersion);
-      if (opts.primaryURL) {
+      if ('primaryURL' in opts && opts.primaryURL) {
         builder.setPrimaryURL(opts.primaryURL);
       }
 
       if (opts.static) {
         addFilesRecursively(
           builder,
-          opts.static.baseURL || opts.baseURL,
+          opts.static.baseURL ?? opts.baseURL,
           opts.static.dir,
           opts
         );
@@ -77,11 +73,10 @@ export default function wbnOutputPlugin(opts: PluginOptions): EnforcedPlugin {
         delete bundle[name];
       }
 
-      const webBundle = maybeSignWebBundle(
-        builder.createBundle(),
-        opts,
-        (key: KeyObject) => infoLogger(`${new WebBundleId(key)}`)
-      );
+      let webBundle = builder.createBundle();
+      if ('integrityBlockSign' in opts) {
+        webBundle = getSignedWebBundle(webBundle, opts, infoLogger);
+      }
 
       this.emitFile({
         fileName: opts.output,

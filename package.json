@@ -48,5 +48,8 @@
     "files": [
       "!**/fixtures/**"
     ]
+  },
+  "dependencies": {
+    "zod": "^3.21.4"
   }
 }
