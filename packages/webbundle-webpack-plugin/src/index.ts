@@ -15,24 +15,19 @@
  */
 
 import webpack, { Compiler, Compilation, WebpackPluginInstance } from 'webpack';
-import { KeyObject } from 'crypto';
 import { BundleBuilder } from 'wbn';
-import { WebBundleId } from 'wbn-sign';
 import {
   addAsset,
   addFilesRecursively,
-  validateOptions,
-  maybeSignWebBundle,
+  getSignedWebBundle,
 } from '../../shared/utils';
-import { PluginOptions } from '../../shared/types';
+import {
+  getValidatedOptionsWithDefaults,
+  PluginOptions,
+  ValidPluginOptions,
+} from '../../shared/types';
 
 const PLUGIN_NAME = 'webbundle-webpack-plugin';
-
-const defaults = {
-  formatVersion: 'b2',
-  output: 'out.wbn',
-  baseURL: '',
-};
 
 // Returns if the semantic version number of Webpack is 4.
 function isWebpackMajorV4(): boolean {
@@ -40,23 +35,22 @@ function isWebpackMajorV4(): boolean {
 }
 
 export class WebBundlePlugin implements WebpackPluginInstance {
-  private opts: PluginOptions;
+  private validOpts: ValidPluginOptions;
 
-  constructor(opts: PluginOptions) {
-    this.opts = Object.assign({}, defaults, opts);
-    validateOptions(this.opts);
+  constructor(rawOpts: PluginOptions) {
+    this.validOpts = getValidatedOptionsWithDefaults(rawOpts);
   }
 
   process = (compilation: Compilation) => {
-    const opts = this.opts;
+    const opts = this.validOpts;
     const builder = new BundleBuilder(opts.formatVersion);
-    if (opts.primaryURL) {
+    if ('primaryURL' in opts && opts.primaryURL) {
       builder.setPrimaryURL(opts.primaryURL);
     }
     if (opts.static) {
       addFilesRecursively(
         builder,
-        opts.static.baseURL || opts.baseURL,
+        opts.static.baseURL ?? opts.baseURL,
         opts.static.dir,
         opts
       );
@@ -84,11 +78,10 @@ export class WebBundlePlugin implements WebpackPluginInstance {
         ? (str: string) => compilation.getLogger(PLUGIN_NAME).info(str)
         : (str: string) => console.log(str);
 
-    const webBundle = maybeSignWebBundle(
-      builder.createBundle(),
-      opts,
-      (key: KeyObject) => infoLogger(`${new WebBundleId(key)}`)
-    );
+    let webBundle = builder.createBundle();
+    if ('integrityBlockSign' in opts) {
+      webBundle = getSignedWebBundle(webBundle, opts, infoLogger);
+    }
 
     if (isWebpackMajorV4()) {
       // @ts-expect-error Missing properties don't exist on webpack v4.
