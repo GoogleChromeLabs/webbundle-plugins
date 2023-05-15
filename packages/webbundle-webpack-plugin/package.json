@@ -28,7 +28,8 @@
   "dependencies": {
     "mime": "^2.4.4",
     "wbn": "0.0.9",
-    "wbn-sign": "0.0.1"
+    "wbn-sign": "0.0.1",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "esbuild": "^0.17.15",
