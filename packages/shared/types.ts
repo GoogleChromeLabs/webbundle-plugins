@@ -16,7 +16,7 @@
 
 import { KeyObject } from 'crypto';
 import * as z from 'zod';
-// TODO(sonkkeli: b282899095): This should get fixed whenever we use a more
+// TODO(sonkkeli: b/282899095): This should get fixed whenever we use a more
 // modern test framework like Jest.
 import { checkAndAddIwaHeaders, iwaHeaderDefaults } from './iwa-headers.js';
 import {
@@ -74,9 +74,9 @@ const keyBasedIntegrityBlockSignSchema = baseIntegrityBlockSignSchema
 const strategyBasedIntegrityBlockSignSchema =
   baseIntegrityBlockSignSchema.extend({
     strategy: z.instanceof(Object).refine(
-      (strategy): strategy is ISigningStrategy => {
+      (strategy: Record<string, any>): strategy is ISigningStrategy => {
         return ['getPublicKey', 'sign'].every(
-          (func) => func in strategy && typeof func === 'function'
+          (func) => func in strategy && typeof strategy[func] === 'function'
         );
       },
       { message: `Strategy must implement "ISigningStrategy"` }
