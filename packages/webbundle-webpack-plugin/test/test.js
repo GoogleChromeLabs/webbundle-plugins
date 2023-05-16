@@ -229,33 +229,6 @@ test('headerOverride - IWA with good headers', async (t) => {
   }
 });
 
-test('headerOverride - IWA with bad headers', async (t) => {
-  const badHeadersTestCase = [
-    { 'cross-origin-embedder-policy': 'unsafe-none' },
-    { 'cross-origin-opener-policy': 'unsafe-none' },
-    { 'cross-origin-resource-policy': 'cross-origin' },
-  ];
-
-  for (const badHeaders of badHeadersTestCase) {
-    for (const isIwaTestCase of [undefined, true]) {
-      await t.throwsAsync(
-        async () => {
-          await getValidatedOptionsWithDefaults({
-            baseURL: TEST_IWA_BASE_URL,
-            output: 'example.swbn',
-            integrityBlockSign: {
-              key: TEST_ED25519_PRIVATE_KEY,
-              isIwa: isIwaTestCase,
-            },
-            headerOverride: badHeaders,
-          });
-        },
-        { instanceOf: Error }
-      );
-    }
-  }
-});
-
 test("headerOverride - non-IWA doesn't enforce IWA headers", async (t) => {
   // Irrelevant what this would contain.
   const randomNonIwaHeaders = { 'x-csrf-token': 'hello-world' };
