@@ -22,9 +22,9 @@ import { IntegrityBlockSigner, WebBundleId } from 'wbn-sign';
 import { checkAndAddIwaHeaders } from './iwa-headers';
 import { ValidIbSignPluginOptions, ValidPluginOptions } from './types';
 
-// If the file name is 'index.html', create an entry for both baseURL/dir/
-// and baseURL/dir/index.html which redirects to the aforementioned. Otherwise
-// just for the asset itself. This matches the behavior of gen-bundle.
+// If the file name is 'index.html', create an entry for both baseURL/dir/ and
+// baseURL/dir/index.html which redirects to the aforementioned. Otherwise just
+// for the asset itself. This matches the behavior of gen-bundle.
 export function addAsset(
   builder: BundleBuilder,
   baseURL: string,
@@ -113,17 +113,18 @@ export function addFilesRecursively(
   }
 }
 
-export function getSignedWebBundle(
+export async function getSignedWebBundle(
   webBundle: Uint8Array,
   opts: ValidIbSignPluginOptions,
   infoLogger: (str: string) => void
-): Uint8Array {
-  const { signedWebBundle } = new IntegrityBlockSigner(webBundle, {
-    key: opts.integrityBlockSign.key,
-  }).sign();
+): Promise<Uint8Array> {
+  const { signedWebBundle } = await new IntegrityBlockSigner(
+    webBundle,
+    opts.integrityBlockSign.strategy
+  ).sign();
 
   const origin = new WebBundleId(
-    opts.integrityBlockSign.key
+    await opts.integrityBlockSign.strategy.getPublicKey()
   ).serializeWithIsolatedWebAppOrigin();
 
   infoLogger(origin);

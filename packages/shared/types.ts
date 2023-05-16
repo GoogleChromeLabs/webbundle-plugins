@@ -16,8 +16,14 @@
 
 import { KeyObject } from 'crypto';
 import * as z from 'zod';
-import { checkAndAddIwaHeaders, iwaHeaderDefaults } from './iwa-headers';
-import { WebBundleId } from 'wbn-sign';
+// TODO(sonkkeli: b/282899095): This should get fixed whenever we use a more
+// modern test framework like Jest.
+import { checkAndAddIwaHeaders, iwaHeaderDefaults } from './iwa-headers.js';
+import {
+  NodeCryptoSigningStrategy,
+  ISigningStrategy,
+  WebBundleId,
+} from 'wbn-sign';
 
 const headersSchema = z.record(z.string());
 
@@ -42,41 +48,63 @@ const nonSigningSchema = baseOptionsSchema.extend({
   primaryURL: z.string().optional(),
 });
 
+const baseIntegrityBlockSignSchema = z.strictObject({
+  isIwa: z.boolean().default(true),
+});
+
+const keyBasedIntegrityBlockSignSchema = baseIntegrityBlockSignSchema
+  .extend({
+    // Unfortunately we cannot use `KeyObject` directly within `instanceof()`,
+    // because its constructor is private.
+    key: z
+      .instanceof(Object)
+      .refine((key): key is KeyObject => key instanceof KeyObject, {
+        message: `Key must be an instance of "KeyObject"`,
+      }),
+  })
+
+  // Use the default NodeCryptoSigningStrategy strategy instead of key.
+  .transform((ibSignOpts) => {
+    return {
+      isIwa: ibSignOpts.isIwa,
+      strategy: new NodeCryptoSigningStrategy(ibSignOpts.key),
+    };
+  });
+
+const strategyBasedIntegrityBlockSignSchema =
+  baseIntegrityBlockSignSchema.extend({
+    strategy: z.instanceof(Object).refine(
+      (strategy: Record<string, any>): strategy is ISigningStrategy => {
+        return ['getPublicKey', 'sign'].every(
+          (func) => func in strategy && typeof strategy[func] === 'function'
+        );
+      },
+      { message: `Strategy must implement "ISigningStrategy"` }
+    ),
+  });
+
 const signingSchema = baseOptionsSchema
   .extend({
-    integrityBlockSign: z.strictObject({
-      // Unfortunately we cannot use `KeyObject` directly within `instanceof()`,
-      // because its constructor is private.
-      key: z
-        .instanceof(Object)
-        .refine((key): key is KeyObject => key instanceof KeyObject, {
-          message: `Key must be an instance of "KeyObject"`,
-        }),
-      isIwa: z.boolean().default(true),
-    }),
+    integrityBlockSign: keyBasedIntegrityBlockSignSchema.or(
+      strategyBasedIntegrityBlockSignSchema
+    ),
   })
 
   // Check that `baseURL` is either not set, or set to the expected origin based
   // on the private key.
-  .refine(
-    (opts) => {
-      const expectedOrigin = new WebBundleId(
-        opts.integrityBlockSign.key
-      ).serializeWithIsolatedWebAppOrigin();
+  .superRefine(async (opts, ctx) => {
+    const publicKey = await opts.integrityBlockSign.strategy.getPublicKey();
+    const expectedOrigin = new WebBundleId(
+      publicKey
+    ).serializeWithIsolatedWebAppOrigin();
 
-      return opts.baseURL === '' || opts.baseURL === expectedOrigin;
-    },
-
-    (opts) => {
-      const expectedOrigin = new WebBundleId(
-        opts.integrityBlockSign.key
-      ).serializeWithIsolatedWebAppOrigin();
-
-      return {
-        message: `The provided "baseURL" option (${opts.baseURL}) does not match the expected base URL (${expectedOrigin}), which is derived from the provided private key`,
-      };
+    if (opts.baseURL !== '' && opts.baseURL !== expectedOrigin) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `The provided "baseURL" option (${opts.baseURL}) does not match the expected base URL (${expectedOrigin}) derived from the public key.`,
+      });
     }
-  )
+  })
 
   // Set and validate the `headerOverride` option.
   .transform((opts, ctx) => {
@@ -106,7 +134,7 @@ const signingSchema = baseOptionsSchema
 
 const optionsSchema = z.union([nonSigningSchema, signingSchema]);
 
-export const getValidatedOptionsWithDefaults = optionsSchema.parse;
+export const getValidatedOptionsWithDefaults = optionsSchema.parseAsync;
 
 export type PluginOptions = z.input<typeof optionsSchema>;
 

@@ -3,7 +3,7 @@
   "scripts": {
     "test": "npm run build && ava",
     "build": "npm run build --workspaces",
-    "pack": "npm pack --workspaces",
+    "pack": "npm pack --workspace=rollup-plugin-webbundle --workspace=webbundle-webpack-plugin",
     "lint": "npm run lint:prettier && npm run lint:eslint",
     "lint:eslint": "eslint --ext .js,.ts,.cjs,.mjs .",
     "lint:prettier": "prettier --check {**/*,*}.{cjs,js,ts,md,json} --config ./package.json --no-error-on-unmatched-pattern",
