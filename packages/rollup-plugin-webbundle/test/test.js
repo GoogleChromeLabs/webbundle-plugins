@@ -28,7 +28,6 @@ import {
   csp,
   iwaHeaderDefaults,
 } from '../../shared/lib/iwa-headers.js';
-import { getValidatedOptionsWithDefaults } from '../../shared/lib/types.js';
 
 const TEST_ED25519_PRIVATE_KEY = wbnSign.parsePemKey(
   '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'

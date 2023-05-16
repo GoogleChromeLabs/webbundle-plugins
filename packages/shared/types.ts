@@ -16,7 +16,8 @@
 
 import { KeyObject } from 'crypto';
 import * as z from 'zod';
-// TODO: Figure out why this import gets broken when it gets imported into tests through getValidatedOptionsWithDefaults import.
+// TODO(sonkkeli: b282899095): This should get fixed whenever we use a more
+// modern test framework like Jest.
 import { checkAndAddIwaHeaders, iwaHeaderDefaults } from './iwa-headers.js';
 import {
   NodeCryptoSigningStrategy,
@@ -70,23 +71,16 @@ const keyBasedIntegrityBlockSignSchema = baseIntegrityBlockSignSchema
     };
   });
 
-// Type guard to check that `strategy` implements `ISigningStrategy` interface.
-const isISigningStrategy = (
-  strategy: unknown
-): strategy is ISigningStrategy => {
-  return (
-    typeof (strategy as ISigningStrategy).getPublicKey === 'function' ||
-    typeof (strategy as ISigningStrategy).sign === 'function'
-  );
-};
-
 const strategyBasedIntegrityBlockSignSchema =
   baseIntegrityBlockSignSchema.extend({
-    strategy: z
-      .instanceof(Object)
-      .refine((ss): ss is ISigningStrategy => isISigningStrategy(ss), {
-        message: `Strategy must implement "ISigningStrategy"`,
-      }),
+    strategy: z.instanceof(Object).refine(
+      (strategy): strategy is ISigningStrategy => {
+        return ['getPublicKey', 'sign'].every(
+          (func) => func in strategy && typeof func === 'function'
+        );
+      },
+      { message: `Strategy must implement "ISigningStrategy"` }
+    ),
   });
 
 const signingSchema = baseOptionsSchema
@@ -98,25 +92,19 @@ const signingSchema = baseOptionsSchema
 
   // Check that `baseURL` is either not set, or set to the expected origin based
   // on the private key.
-  .refine(
-    async (opts) => {
-      const publicKey = await opts.integrityBlockSign.strategy.getPublicKey();
-      const expectedOrigin = new WebBundleId(
-        publicKey
-      ).serializeWithIsolatedWebAppOrigin();
+  .superRefine(async (opts, ctx) => {
+    const publicKey = await opts.integrityBlockSign.strategy.getPublicKey();
+    const expectedOrigin = new WebBundleId(
+      publicKey
+    ).serializeWithIsolatedWebAppOrigin();
 
-      const baseUrlOk = opts.baseURL === '' || opts.baseURL === expectedOrigin;
-      // Error message parameter doesn't support async so printing the value
-      // already here if it's invalid.
-      if (!baseUrlOk) console.log(`Expected base URL: ${expectedOrigin}.`);
-      return baseUrlOk;
-    },
-    (opts) => {
-      return {
-        message: `The provided "baseURL" option (${opts.baseURL}) does not match the expected base URL derived from the public key.`,
-      };
+    if (opts.baseURL !== '' && opts.baseURL !== expectedOrigin) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `The provided "baseURL" option (${opts.baseURL}) does not match the expected base URL (${expectedOrigin}) derived from the public key.`,
+      });
     }
-  )
+  })
 
   // Set and validate the `headerOverride` option.
   .transform((opts, ctx) => {

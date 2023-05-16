@@ -15,7 +15,14 @@
  */
 
 import test from 'ava';
-import { getValidatedOptionsWithDefaults } from '../types.js';
+import { getValidatedOptionsWithDefaults } from '../lib/types.js';
+import * as wbnSign from 'wbn-sign';
+
+const TEST_ED25519_PRIVATE_KEY = wbnSign.parsePemKey(
+  '-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----'
+);
+const TEST_IWA_BASE_URL =
+  'isolated-app://4tkrnsmftl4ggvvdkfth3piainqragus2qbhf7rlz2a3wo3rh4wqaaic/';
 
 test('headerOverride - IWA with bad headers', async (t) => {
   const badHeadersTestCase = [

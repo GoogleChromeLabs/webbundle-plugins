@@ -30,7 +30,6 @@ import {
   csp,
   iwaHeaderDefaults,
 } from '../../shared/lib/iwa-headers.js';
-import { getValidatedOptionsWithDefaults } from '../../shared/lib/types.js';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
