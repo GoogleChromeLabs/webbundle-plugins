@@ -7,7 +7,7 @@ until the spec stabilizes.
 
 ## Requirements
 
-This plugin requires Node v12.0.0+ and Webpack v4.0.0+.
+This plugin requires Node v14.0.0+ and Webpack v4.0.1+.
 
 ## Install
 
