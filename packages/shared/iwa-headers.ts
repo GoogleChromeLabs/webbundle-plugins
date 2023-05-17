@@ -29,7 +29,7 @@ export const corp: Headers = Object.freeze({
 export const CSP_HEADER_NAME = 'content-security-policy';
 export const csp: Headers = Object.freeze({
   [CSP_HEADER_NAME]:
-    "base-uri 'none'; default-src 'self'; object-src 'none'; frame-src 'self' https:; connect-src 'self' https:; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' https: blob: data:; media-src 'self' https: blob: data:; font-src 'self' blob: data:; require-trusted-types-for 'script'; frame-ancestors 'self';",
+    "base-uri 'none'; default-src 'self'; object-src 'none'; frame-src 'self' https: blob: data:; connect-src 'self' https:; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' https: blob: data:; media-src 'self' https: blob: data:; font-src 'self' blob: data:; require-trusted-types-for 'script'; frame-ancestors 'self';",
 });
 
 // These headers must have these exact values for Isolated Web Apps, whereas the
