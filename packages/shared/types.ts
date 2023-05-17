@@ -74,6 +74,7 @@ const keyBasedIntegrityBlockSignSchema = baseIntegrityBlockSignSchema
 const strategyBasedIntegrityBlockSignSchema =
   baseIntegrityBlockSignSchema.extend({
     strategy: z.instanceof(Object).refine(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (strategy: Record<string, any>): strategy is ISigningStrategy => {
         return ['getPublicKey', 'sign'].every(
           (func) => func in strategy && typeof strategy[func] === 'function'

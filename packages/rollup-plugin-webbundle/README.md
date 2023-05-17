@@ -13,7 +13,7 @@ This plugin requires Node v14.0.0+ and Rollup v1.21.0+.
 
 Using npm:
 
-```console
+```bash
 npm install rollup-plugin-webbundle --save-dev
 ```
 

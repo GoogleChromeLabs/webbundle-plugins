@@ -16,6 +16,10 @@
     "build": "rm -rf lib && esbuild --bundle --packages=external --format=cjs --outfile=lib/index.cjs src/index.ts --platform=node --legal-comments=inline --sourcemap --keep-names"
   },
   "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",
+  "contributors": [
+    "Sonja Laurila <laurila@google.com> (https://github.com/sonkkeli)",
+    "Christian Flach <cmfcmf@google.com> (https://github.com/cmfcmf)"
+  ],
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
