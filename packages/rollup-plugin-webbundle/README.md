@@ -272,6 +272,10 @@ This is not an officially supported Google product.
   to pass one of the predefined strategies or ones own implementation class for
   ISigningStrategy. One can also use the old `integrityBlockSign.key` option,
   which defaults to the predefined `NodeCryptoSigningStrategy` strategy.
+- Refactor plugin to be in TypeScript.
+- Combine the Webpack and Rollup web bundle plugins to live in the same
+  repository and share some duplicated code. Taking advantage of
+  [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
 
 ### v0.1.1
 
