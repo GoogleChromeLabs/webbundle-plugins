@@ -96,7 +96,7 @@ module.exports = async () => {
           'cross-origin-opener-policy': 'same-origin',
           'cross-origin-resource-policy': 'same-origin',
           'content-security-policy':
-            "base-uri 'none'; default-src 'self'; object-src 'none'; frame-src 'self' https:; connect-src 'self' https:; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' https: blob: data:; media-src 'self' https: blob: data:; font-src 'self' blob: data:; require-trusted-types-for 'script';",
+            "base-uri 'none'; default-src 'self'; object-src 'none'; frame-src 'self' https: blob: data:; connect-src 'self' https:; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' https: blob: data:; media-src 'self' https: blob: data:; font-src 'self' blob: data:; require-trusted-types-for 'script';",
         },
       }),
     ],
@@ -273,7 +273,7 @@ This is not an officially supported Google product.
 ### v0.1.2
 
 - Add support for `integrityBlockSign.strategy` plugin option which can be used
-  to pass one of the predefined strategies or ones own implementation class for
+  to pass one of the predefined strategies or one's own implementation class for
   ISigningStrategy. One can also use the old `integrityBlockSign.key` option,
   which defaults to the predefined `NodeCryptoSigningStrategy` strategy.
 - Refactor plugin to be in TypeScript.
