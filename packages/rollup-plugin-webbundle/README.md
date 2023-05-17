@@ -70,22 +70,35 @@ import * as wbnSign from 'wbn-sign';
 import dotenv from 'dotenv';
 dotenv.config({ path: './.env' });
 
-const key = wbnSign.parsePemKey(process.env.ED25519KEY);
+export default async () => {
+  const key = wbnSign.parsePemKey(
+    process.env.ENC_ED25519KEY,
+    await wbnSign.readPassphrase()
+  );
 
-export default {
-  input: 'src/index.js',
-  output: {
-    dir: 'dist',
-    format: 'esm',
-  },
-  plugins: [
-    webbundle({
-      baseURL: new wbnSign.WebBundleId(key).serializeWithIsolatedWebAppOrigin(),
-      static: { dir: 'public' },
-      output: 'signed.swbn',
-      integrityBlockSign: { key },
-    }),
-  ],
+  return {
+    input: 'src/index.js',
+    output: { dir: 'dist', format: 'esm' },
+    plugins: [
+      webbundle({
+        baseURL: new wbnSign.WebBundleId(
+          key
+        ).serializeWithIsolatedWebAppOrigin(),
+        static: { dir: 'public' },
+        output: 'signed.swbn',
+        integrityBlockSign: {
+          strategy: new wbnSign.NodeCryptoSigningStrategy(key),
+        },
+        headerOverride: {
+          'cross-origin-embedder-policy': 'require-corp',
+          'cross-origin-opener-policy': 'same-origin',
+          'cross-origin-resource-policy': 'same-origin',
+          'content-security-policy':
+            "base-uri 'none'; default-src 'self'; object-src 'none'; frame-src 'self' https: blob: data:; connect-src 'self' https:; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' https: blob: data:; media-src 'self' https: blob: data:; font-src 'self' blob: data:; require-trusted-types-for 'script';",
+        },
+      }),
+    ],
+  };
 };
 ```
 
@@ -134,33 +147,97 @@ Specifies the file name of the Web Bundle to emit.
 
 ### `integrityBlockSign`
 
-Type: `{ key: KeyObject }`
+Type:
+`{ key: KeyObject, isIwa?: boolean } | { strategy: ISigningStrategy, isIwa?: boolean }`
 
 Object specifying the signing options with
 [Integrity Block](https://github.com/WICG/webpackage/blob/main/explainers/integrity-signature.md).
 
-### `integrityBlockSign.key` (required if `integrityBlockSign` is in place)
+### `integrityBlockSign.key`
+
+Note: Either this or `integrityBlockSign.strategy` is required when
+`integrityBlockSign` is in place.
 
 Type: `KeyObject`
 
-A parsed Ed25519 private key, which can be generated with:
+An unencrypted ed25519 private key can be generated with:
 
 ```bash
 openssl genpkey -algorithm Ed25519 -out ed25519key.pem
 ```
 
-And parsed with `wbnSign.parsePemKey(process.env.ED25519KEY)` helper function.
+For better security, one should prefer using passphrase-encrypted ed25519
+private keys. To encrypt an unencrypted private key, run:
 
-Note than in order for it to be parsed correctly, it must contain the `BEGIN`
-and `END` texts and line breaks (`\n`). Below an example `.env` file:
+```bash
+# encrypt the key (will ask for a passphrase, make sure to use a strong one)
+openssl pkcs8 -in ed25519key.pem -topk8 -out encrypted_ed25519key.pem
+
+# delete the unencrypted key
+rm ed25519key.pem
+```
+
+It can be parsed with an imported helper function `parsePemKey(...)` from
+`wbn-sign` npm package. For an encrypted private key there's also an async
+helper function (`readPassphrase()`) to prompt the user for the passphrase the
+key was encrypted with.
+
+```js
+// For an unencrypted ed25519 key.
+const key = wbnSign.parsePemKey(process.env.ED25519KEY);
+
+// For an encrypted ed25519 key.
+const key = wbnSign.parsePemKey(
+  process.env.ENC_ED25519KEY,
+  await wbnSign.readPassphrase()
+);
+```
+
+Note that in order for the key to be parsed correctly, it must contain the
+`BEGIN` and `END` headers and line breaks (`\n`). Below an example `.env` file:
 
 ```bash
 ED25519KEY="-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh5PYzb5GAcIfHZ+bw6tcd/LZXh\n-----END PRIVATE KEY-----"
 ```
 
-### `integrityBlockSign.isIwa`
+### `integrityBlockSign.strategy`
 
-Type: `boolean`
+Note: Either this or `integrityBlockSign.key` is required when
+`integrityBlockSign` is in place.
+
+Type: `ISigningStrategy`
+
+Example web bundle plugin options using a signing strategy:
+
+```js
+const pluginOptionsWithPredefinedSigningStrategy = {
+  // ...other plugin options here...
+  integrityBlockSign: {
+    strategy: new wbnSign.NodeCryptoSigningStrategy(privateKey),
+  },
+};
+
+const pluginOptionsWithCustomSigningStrategy = {
+  // ...other plugin options here...
+  integrityBlockSign: {
+    strategy: new (class /* implements ISigningStrategy */ {
+      async sign(data) {
+        /** E.g. connect to one's external signing service that signs the
+         * payload. */
+      }
+      async getPublicKey() {
+        /** E.g. connect to one's external signing service that returns the
+         * public key. */
+      }
+    })(),
+  },
+};
+```
+
+### `integrityBlockSign.isIwa` (optional)
+
+Type: `boolean`  
+Default: `true`
 
 If `undefined` or `true`, enforces certain
 [Isolated Web App](https://github.com/WICG/isolated-web-apps) -related checks
@@ -189,9 +266,20 @@ This is not an officially supported Google product.
 
 ## Release Notes
 
+### v0.1.2
+
+- Add support for `integrityBlockSign.strategy` plugin option which can be used
+  to pass one of the predefined strategies or one's own implementation class for
+  ISigningStrategy. One can also use the old `integrityBlockSign.key` option,
+  which defaults to the predefined `NodeCryptoSigningStrategy` strategy.
+- Refactor plugin to be in TypeScript.
+- Combine the Webpack and Rollup web bundle plugins to live in the same
+  repository and share some duplicated code. Taking advantage of
+  [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
+
 ### v0.1.1
 
-- Add support for overriding headers.
+- Add support for overriding headers with `headerOverride` plugin option.
 
 ### v0.1.0
 
