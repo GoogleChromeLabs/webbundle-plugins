@@ -15,6 +15,10 @@
   },
   "type": "module",
   "author": "Kunihiko Sakamoto <ksakamoto@chromium.org>",
+  "contributors": [
+    "Sonja Laurila <laurila@google.com> (https://github.com/sonkkeli)",
+    "Christian Flach <cmfcmf@google.com> (https://github.com/cmfcmf)"
+  ],
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
