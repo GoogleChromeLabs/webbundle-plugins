@@ -13,7 +13,7 @@ This plugin requires Node v14.0.0+ and Webpack v4.0.1+.
 
 Using npm:
 
-```console
+```bash
 npm install webbundle-webpack-plugin --save-dev
 ```
 
