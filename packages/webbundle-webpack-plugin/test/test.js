@@ -15,6 +15,7 @@
  */
 
 import test from 'ava';
+import crypto from 'crypto';
 import webpack from 'webpack';
 import MemoryFS from 'memory-fs';
 import url from 'url';
@@ -296,4 +297,38 @@ test("integrityBlockSign with undefined baseURL doesn't fail", async (t) => {
     },
   });
   t.deepEqual(memfs.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
+});
+
+// The webpack plugin had a bug that it didn't work for actually async code so
+// this test will prevent that from occurring again.
+test('integrityBlockSign with sleeping CustomSigningStrategy', async (t) => {
+  function sleep(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  class CustomSigningStrategy {
+    async sign(data) {
+      await sleep(500);
+      return crypto.sign(
+        /*algorithm=*/ undefined,
+        data,
+        TEST_ED25519_PRIVATE_KEY
+      );
+    }
+
+    async getPublicKey() {
+      await sleep(500);
+      return crypto.createPublicKey(TEST_ED25519_PRIVATE_KEY);
+    }
+  }
+
+  const { memfs } = await run({
+    output: 'async.swbn',
+    integrityBlockSign: {
+      strategy: new CustomSigningStrategy(),
+    },
+  });
+  t.deepEqual(memfs.readdirSync('/out').sort(), ['async.swbn', 'main.js']);
 });

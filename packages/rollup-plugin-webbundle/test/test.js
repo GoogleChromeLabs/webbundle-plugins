@@ -17,6 +17,7 @@
 import test from 'ava';
 import * as path from 'path';
 import * as rollup from 'rollup';
+import crypto from 'crypto';
 import url from 'url';
 import * as wbn from 'wbn';
 import * as wbnSign from 'wbn-sign';
@@ -386,6 +387,49 @@ test("integrityBlockSign with undefined baseURL doesn't fail", async (t) => {
           strategy: new wbnSign.NodeCryptoSigningStrategy(
             TEST_ED25519_PRIVATE_KEY
           ),
+        },
+      }),
+    ],
+  });
+  const { output } = await bundle.generate({ format: 'esm' });
+  const keys = Object.keys(output);
+  t.is(keys.length, 1);
+  t.is(output[keys[0]].fileName, outputFileName);
+});
+
+// To make sure actually async things work.
+test('integrityBlockSign with sleeping CustomSigningStrategy', async (t) => {
+  function sleep(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  class CustomSigningStrategy {
+    async sign(data) {
+      await sleep(500);
+      return crypto.sign(
+        /*algorithm=*/ undefined,
+        data,
+        TEST_ED25519_PRIVATE_KEY
+      );
+    }
+
+    async getPublicKey() {
+      await sleep(500);
+      return crypto.createPublicKey(TEST_ED25519_PRIVATE_KEY);
+    }
+  }
+
+  const outputFileName = 'out.swbn';
+
+  const bundle = await rollup.rollup({
+    input: 'fixtures/index.js',
+    plugins: [
+      webbundle({
+        output: outputFileName,
+        integrityBlockSign: {
+          strategy: new CustomSigningStrategy(),
         },
       }),
     ],

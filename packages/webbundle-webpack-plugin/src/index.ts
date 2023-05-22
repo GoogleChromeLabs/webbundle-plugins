@@ -95,12 +95,15 @@ export class WebBundlePlugin implements WebpackPluginInstance {
 
   apply = (compiler: Compiler) => {
     if (isWebpackMajorV4()) {
-      compiler.hooks.emit.tap(this.constructor.name, this.process);
+      compiler.hooks.emit.tapPromise(
+        this.constructor.name,
+        (compilation: Compilation) => this.process(compilation)
+      );
     } else {
       compiler.hooks.thisCompilation.tap(
         this.constructor.name,
         (compilation: Compilation) => {
-          compilation.hooks.processAssets.tap(
+          compilation.hooks.processAssets.tapPromise(
             {
               name: this.constructor.name,
               stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
