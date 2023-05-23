@@ -270,6 +270,12 @@ This is not an officially supported Google product.
 
 ## Release Notes
 
+### v0.1.3
+
+- BUG: Async `integrityBlockSign.strategy` was not working correctly. Now with
+  `tapPromise` instead of `tap` this is fixed.
+  \[[#59](https://github.com/GoogleChromeLabs/webbundle-plugins/pull/59/)\]
+
 ### v0.1.2
 
 - Add support for `integrityBlockSign.strategy` plugin option which can be used
