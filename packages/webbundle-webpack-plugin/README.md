@@ -270,6 +270,11 @@ This is not an officially supported Google product.
 
 ## Release Notes
 
+### v0.1.4
+
+- Updates to style-src and wss CSP values.
+- Bumping underlying wbn-sign version to v0.1.1.
+
 ### v0.1.3
 
 - BUG: Async `integrityBlockSign.strategy` was not working correctly. Now with
