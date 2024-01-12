@@ -252,17 +252,23 @@ Type: `{ [key: string]: string; }` |
 Object of strings specifying overridden headers or a function returning the same
 kind of object.
 
-## License
+## Discuss & Help
 
-Licensed under the Apache-2.0 license.
+For discussions related to this repository's content, the Web Bundle plugins for
+webpack and rollup, please use
+[GitHub Issues](https://github.com/GoogleChromeLabs/webbundle-plugins/issues).
 
-## Contributing
+If you'd like to discuss the Web Packaging proposal itself, consider opening an
+issue in its incubation repository at https://github.com/WICG/webpackage.
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) file.
+For discussions related to Isolated Web Apps in general, or Chromium-specific
+implementation and development questions, please use the
+[iwa-dev@chromium.org](https://groups.google.com/a/chromium.org/g/iwa-dev)
+mailing list.
 
-## Disclaimer
-
-This is not an officially supported Google product.
+If you'd like to discuss the Isolated Web Apps proposal, which builds on top of
+Web Bundles, consider opening an issue in the incubation repository at
+https://github.com/WICG/isolated-web-apps.
 
 ## Release Notes
 
@@ -297,3 +303,15 @@ This is not an officially supported Google product.
 - Support for signing web bundles with
   [integrity block](https://github.com/WICG/webpackage/blob/main/explainers/integrity-signature.md)
   added.
+
+## License
+
+Licensed under the Apache-2.0 license.
+
+## Contributing
+
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) file.
+
+## Disclaimer
+
+This is not an officially supported Google product.
