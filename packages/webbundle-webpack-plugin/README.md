@@ -63,7 +63,7 @@ Also as in the below example, `baseURL` must be of format
 generated from the private key with `WebBundleId` helper class from `wbn-sign`
 package. See
 [Scheme explainer](https://github.com/WICG/isolated-web-apps/blob/main/Scheme.md)
-for more details.
+for more details. Also note that providing `headerOverride` is optional.
 
 ```js
 /* webpack.config.js */
@@ -248,7 +248,7 @@ If `undefined` or `true`, enforces certain
 for the headers. Also adds default IWA headers if completely missing. If set to
 `false`, skips validation checks and doesn't tamper with the headers.
 
-### `headerOverride`
+### `headerOverride` (optional)
 
 Type: `{ [key: string]: string; }` |
 `(filepath: string) => { [key: string]: string; };`
@@ -300,7 +300,8 @@ https://github.com/WICG/isolated-web-apps.
 
 ### v0.1.1
 
-- Add support for overriding headers with `headerOverride` plugin option.
+- Add support for overriding headers with an optional `headerOverride` plugin
+  option.
 
 ### v0.1.0
 
