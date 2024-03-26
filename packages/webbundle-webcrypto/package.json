@@ -1,0 +1,19 @@
+{
+  "name": "webbundle-webcrypto",
+  "version": "0.1.0",
+  "description": "Generate Signed Web Bundle with Web Cryptography API",
+  "license": "WTFPLv2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/guest271314/webbundle"
+  },
+  "dependencies": {
+    "base32-encode": "^2.0.0",
+    "esbuild": "^0.17.19",
+    "mime": "^2.6.0",
+    "rollup": "^2.79.1",
+    "wbn": "^0.0.9",
+    "wbn-sign-webcrypto": "https://github.com/guest271314/wbn-sign-webcrypto.git",
+    "zod": "^3.22.4"
+  }
+}
