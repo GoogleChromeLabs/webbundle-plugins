@@ -56,7 +56,8 @@ also requires installing `dotenv` npm package as a dev dependency.
 
 It is also required to have a
 [Web App Manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) at
-`/.well-known/manifest.webmanifest`, which can be placed e.g. in the `static` directory.
+`/.well-known/manifest.webmanifest`, which can be placed e.g. in the `static`
+directory.
 
 Also as in the below example, `baseURL` must be of format
 `isolated-app://${WEB_BUNDLE_ID}` for Isolated Web Apps. It can easily be
