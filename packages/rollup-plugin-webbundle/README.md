@@ -273,6 +273,11 @@ https://github.com/WICG/isolated-web-apps.
 
 ## Release Notes
 
+### v0.1.4
+
+- Add support for ECDSA P-256 SHA-256 signing algorithm
+- Bumping underlying wbn-sign version to v0.1.3.
+
 ### v0.1.3
 
 - Updates to style-src and wss CSP values.
