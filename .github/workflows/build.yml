@@ -59,7 +59,9 @@ jobs:
         working-directory: ./packages/rollup-plugin-webbundle
 
       - name: Install Webpack v${{ matrix.test-case.webpack }}
-        run: npm install --save-dev webpack@${{ matrix.test-case.webpack }} @types/webpack
+        run:
+          npm install --save-dev webpack@${{ matrix.test-case.webpack }}
+          @types/webpack
         working-directory: ./packages/webbundle-webpack-plugin
 
       - run: npm run build

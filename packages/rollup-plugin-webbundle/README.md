@@ -111,7 +111,8 @@ should be written to `dist/signed.swbn`.
 
 ### `baseURL`
 
-Type: `string`  
+Type: `string`
+
 Default: `''`
 
 Specifies the URL prefix prepended to the file names in the bundle. Non-empty
@@ -119,14 +120,16 @@ baseURL must end with `/`.
 
 ### `formatVersion`
 
-Type: `string`  
+Type: `string`
+
 Default: `b2`
 
 Specifies WebBundle format version.
 
 ### `primaryURL`
 
-Type: `string`  
+Type: `string`
+
 Default: baseURL
 
 Specifies the bundle's main resource URL. If omitted, the value of the `baseURL`
@@ -141,7 +144,8 @@ If specified, files and subdirectories under `dir` will be added to the bundle.
 
 ### `output`
 
-Type: `string`  
+Type: `string`
+
 Default: `out.wbn`
 
 Specifies the file name of the Web Bundle to emit.
@@ -149,15 +153,15 @@ Specifies the file name of the Web Bundle to emit.
 ### `integrityBlockSign`
 
 Type:
-`{ key: KeyObject, isIwa?: boolean } | { strategy: ISigningStrategy, isIwa?: boolean }`
+
+- `{ key: KeyObject, isIwa?: boolean }`
+- `{ strategy: ISigningStrategy, isIwa?: boolean }`
+- `{ strategies: Array<ISigningStrategy>, webBundleId: string, isIwa?: boolean }`
 
 Object specifying the signing options with
 [Integrity Block](https://github.com/WICG/webpackage/blob/main/explainers/integrity-signature.md).
 
 ### `integrityBlockSign.key`
-
-Note: Either this or `integrityBlockSign.strategy` is required when
-`integrityBlockSign` is in place.
 
 Type: `KeyObject`
 
@@ -203,9 +207,6 @@ ED25519KEY="-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIB8nP5PpWU7HiILHSfh
 
 ### `integrityBlockSign.strategy`
 
-Note: Either this or `integrityBlockSign.key` is required when
-`integrityBlockSign` is in place.
-
 Type: `ISigningStrategy`
 
 Example web bundle plugin options using a signing strategy:
@@ -235,9 +236,37 @@ const pluginOptionsWithCustomSigningStrategy = {
 };
 ```
 
+### `integrityBlockSign.strategies`
+
+Type: `Array<ISigningStrategy>`
+
+Use this overload to sign a bundle with multiple keys. Note that `webBundleId`
+must always be specified when using `strategies`.
+
+```
+const pluginOptionsWithMultipleStrategiesAndWebBundleId = {
+  // ...other plugin options here...
+  integrityBlockSign: {
+    strategies: [
+      new NodeCryptoSigningStrategy(privateKey1),
+      new NodeCryptoSigningStrategy(privateKey2)
+    ],
+    webBundleId: "some-random-id"
+  },
+};
+```
+
+### `integrityBlockSign.webBundleId`
+
+Type: `string`
+
+Allows specifying a custom id for this signed web bundle to decouple it from the
+signing keys. Must be used together with `strategies`.
+
 ### `integrityBlockSign.isIwa` (optional)
 
-Type: `boolean`  
+Type: `boolean`
+
 Default: `true`
 
 If `undefined` or `true`, enforces certain
@@ -272,6 +301,13 @@ Web Bundles, consider opening an issue in the incubation repository at
 https://github.com/WICG/isolated-web-apps.
 
 ## Release Notes
+
+### v0.2.0
+
+- Add support for the v2 integrity block format. Now web-bundle-id is no longer
+  presumed to be a derivative of the first public key in the stack, but rather
+  acts as a separate entry in the integrity block attributes, and multiple
+  independent signatures are allowed to facilitate key rotation.
 
 ### v0.1.4
 

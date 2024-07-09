@@ -143,8 +143,10 @@ test('integrityBlockSign', async (t) => {
     t.truthy(wbnLength < swbnFile.length);
 
     const { signedWebBundle } = await new wbnSign.IntegrityBlockSigner(
+      /*is_v2=*/ true,
       swbnFile.slice(-wbnLength),
-      new wbnSign.NodeCryptoSigningStrategy(TEST_ED25519_PRIVATE_KEY)
+      new wbnSign.WebBundleId(TEST_ED25519_PRIVATE_KEY).serialize(),
+      [new wbnSign.NodeCryptoSigningStrategy(TEST_ED25519_PRIVATE_KEY)]
     ).sign();
 
     t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
@@ -331,4 +333,43 @@ test('integrityBlockSign with sleeping CustomSigningStrategy', async (t) => {
     },
   });
   t.deepEqual(memfs.readdirSync('/out').sort(), ['async.swbn', 'main.js']);
+});
+
+test('integrityBlockSign with multiple strategies', async (t) => {
+  // ECDSA P-256 SHA-256 signatures are not deterministic, so this test uses
+  // only Ed25519 ones for generating bundles side-by-side.
+  const keyPairs = [
+    crypto.generateKeyPairSync('ed25519'),
+    crypto.generateKeyPairSync('ed25519'),
+    crypto.generateKeyPairSync('ed25519'),
+  ];
+
+  const webBundleId = new wbnSign.WebBundleId(keyPairs[0].privateKey);
+  const strategies = keyPairs.map(
+    (keyPair) => new wbnSign.NodeCryptoSigningStrategy(keyPair.privateKey)
+  );
+
+  const { memfs } = await run({
+    baseURL: webBundleId.serializeWithIsolatedWebAppOrigin(),
+    output: 'example.swbn',
+    integrityBlockSign: {
+      webBundleId: webBundleId.serialize(),
+      strategies,
+    },
+  });
+
+  t.deepEqual(memfs.readdirSync('/out').sort(), ['example.swbn', 'main.js']);
+
+  const swbnFile = memfs.readFileSync('/out/example.swbn');
+  const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
+  t.truthy(wbnLength < swbnFile.length);
+
+  const { signedWebBundle } = await new wbnSign.IntegrityBlockSigner(
+    /*is_v2=*/ true,
+    swbnFile.slice(-wbnLength),
+    webBundleId.serialize(),
+    strategies
+  ).sign();
+
+  t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
 });
