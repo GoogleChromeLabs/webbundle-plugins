@@ -15,6 +15,7 @@
  */
 
 import { KeyObject } from 'crypto';
+import { URL } from 'url';
 import * as z from 'zod';
 // TODO(sonkkeli: b/282899095): This should get fixed whenever we use a more
 // modern test framework like Jest.
@@ -67,12 +68,13 @@ const keyBasedIntegrityBlockSignSchema = baseIntegrityBlockSignSchema
   .transform((ibSignOpts) => {
     return {
       isIwa: ibSignOpts.isIwa,
-      strategy: new NodeCryptoSigningStrategy(ibSignOpts.key),
+      webBundleId: new WebBundleId(ibSignOpts.key).serialize(),
+      strategies: [new NodeCryptoSigningStrategy(ibSignOpts.key)],
     };
   });
 
-const strategyBasedIntegrityBlockSignSchema =
-  baseIntegrityBlockSignSchema.extend({
+const strategyBasedIntegrityBlockSignSchema = baseIntegrityBlockSignSchema
+  .extend({
     strategy: z.instanceof(Object).refine(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (strategy: Record<string, any>): strategy is ISigningStrategy => {
@@ -82,27 +84,52 @@ const strategyBasedIntegrityBlockSignSchema =
       },
       { message: `Strategy must implement "ISigningStrategy"` }
     ),
+  })
+  .transform(async (ibSignOpts) => {
+    return {
+      isIwa: ibSignOpts.isIwa,
+      webBundleId: new WebBundleId(
+        await ibSignOpts.strategy.getPublicKey()
+      ).serialize(),
+      strategies: [ibSignOpts.strategy],
+    };
+  });
+
+const strategiesBasedIntegrityBlockSignSchemaWithWebBundleId =
+  baseIntegrityBlockSignSchema.extend({
+    strategies: z
+      .array(
+        z.instanceof(Object).refine(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (strategy: Record<string, any>): strategy is ISigningStrategy => {
+            return ['getPublicKey', 'sign'].every(
+              (func) => func in strategy && typeof strategy[func] === 'function'
+            );
+          },
+          { message: `Strategy must implement "ISigningStrategy"` }
+        )
+      )
+      .min(1),
+    webBundleId: z.string().min(1),
   });
 
 const signingSchema = baseOptionsSchema
   .extend({
-    integrityBlockSign: keyBasedIntegrityBlockSignSchema.or(
-      strategyBasedIntegrityBlockSignSchema
-    ),
+    integrityBlockSign: z.union([
+      keyBasedIntegrityBlockSignSchema,
+      strategyBasedIntegrityBlockSignSchema,
+      strategiesBasedIntegrityBlockSignSchemaWithWebBundleId,
+    ]),
   })
 
   // Check that `baseURL` is either not set, or set to the expected origin based
   // on the private key.
-  .superRefine(async (opts, ctx) => {
-    const publicKey = await opts.integrityBlockSign.strategy.getPublicKey();
-    const expectedOrigin = new WebBundleId(
-      publicKey
-    ).serializeWithIsolatedWebAppOrigin();
-
-    if (opts.baseURL !== '' && opts.baseURL !== expectedOrigin) {
+  .superRefine((opts, ctx) => {
+    const webBundleId = opts.integrityBlockSign.webBundleId;
+    if (opts.baseURL !== '' && new URL(opts.baseURL).host !== webBundleId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `The provided "baseURL" option (${opts.baseURL}) does not match the expected base URL (${expectedOrigin}) derived from the public key.`,
+        message: `The hostname of the provided "baseURL" option (${opts.baseURL}) does not match the expected host (${webBundleId}) derived from the public key.`,
       });
     }
   })
@@ -133,7 +160,7 @@ const signingSchema = baseOptionsSchema
     return opts;
   });
 
-const optionsSchema = z.union([nonSigningSchema, signingSchema]);
+export const optionsSchema = z.union([nonSigningSchema, signingSchema]);
 
 export const getValidatedOptionsWithDefaults = optionsSchema.parseAsync;
 

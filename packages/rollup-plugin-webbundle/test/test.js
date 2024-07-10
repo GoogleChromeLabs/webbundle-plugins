@@ -180,6 +180,7 @@ test('integrityBlockSign', async (t) => {
       strategy: new wbnSign.NodeCryptoSigningStrategy(TEST_ED25519_PRIVATE_KEY),
     },
   ];
+
   for (const testCase of testCases) {
     const bundle = await rollup.rollup({
       input: 'fixtures/index.js',
@@ -201,8 +202,10 @@ test('integrityBlockSign', async (t) => {
     t.truthy(wbnLength < swbnFile.length);
 
     const { signedWebBundle } = await new wbnSign.IntegrityBlockSigner(
+      /*is_v2=*/ true,
       swbnFile.slice(-wbnLength),
-      new wbnSign.NodeCryptoSigningStrategy(TEST_ED25519_PRIVATE_KEY)
+      new wbnSign.WebBundleId(TEST_ED25519_PRIVATE_KEY).serialize(),
+      [new wbnSign.NodeCryptoSigningStrategy(TEST_ED25519_PRIVATE_KEY)]
     ).sign();
 
     t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
@@ -438,4 +441,51 @@ test('integrityBlockSign with sleeping CustomSigningStrategy', async (t) => {
   const keys = Object.keys(output);
   t.is(keys.length, 1);
   t.is(output[keys[0]].fileName, outputFileName);
+});
+
+test('integrityBlockSign with multiple strategies', async (t) => {
+  // ECDSA P-256 SHA-256 signatures are not deterministic, so this test uses
+  // only Ed25519 ones for generating bundles side-by-side.
+  const keyPairs = [
+    crypto.generateKeyPairSync('ed25519'),
+    crypto.generateKeyPairSync('ed25519'),
+    crypto.generateKeyPairSync('ed25519'),
+  ];
+
+  const webBundleId = new wbnSign.WebBundleId(keyPairs[0].privateKey);
+  const strategies = keyPairs.map(
+    (keyPair) => new wbnSign.NodeCryptoSigningStrategy(keyPair.privateKey)
+  );
+
+  const outputFileName = 'out.swbn';
+  const bundle = await rollup.rollup({
+    input: 'fixtures/index.js',
+    plugins: [
+      webbundle({
+        baseURL: webBundleId.serializeWithIsolatedWebAppOrigin(),
+        output: outputFileName,
+        integrityBlockSign: {
+          webBundleId: webBundleId.serialize(),
+          strategies,
+        },
+      }),
+    ],
+  });
+  const { output } = await bundle.generate({ format: 'esm' });
+  const keys = Object.keys(output);
+  t.is(keys.length, 1);
+  t.is(output[keys[0]].fileName, outputFileName);
+
+  const swbnFile = output[keys[0]].source;
+  const wbnLength = Number(Buffer.from(swbnFile.slice(-8)).readBigUint64BE());
+  t.truthy(wbnLength < swbnFile.length);
+
+  const { signedWebBundle } = await new wbnSign.IntegrityBlockSigner(
+    /*is_v2=*/ true,
+    swbnFile.slice(-wbnLength),
+    webBundleId.serialize(),
+    strategies
+  ).sign();
+
+  t.deepEqual(swbnFile, Buffer.from(signedWebBundle));
 });

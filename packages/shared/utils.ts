@@ -18,7 +18,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import mime from 'mime';
 import { combineHeadersForUrl, BundleBuilder } from 'wbn';
-import { IntegrityBlockSigner, WebBundleId } from 'wbn-sign';
+import { IntegrityBlockSigner } from 'wbn-sign';
 import { checkAndAddIwaHeaders } from './iwa-headers';
 import { ValidIbSignPluginOptions, ValidPluginOptions } from './types';
 
@@ -119,14 +119,12 @@ export async function getSignedWebBundle(
   infoLogger: (str: string) => void
 ): Promise<Uint8Array> {
   const { signedWebBundle } = await new IntegrityBlockSigner(
+    /*is_v2=*/ true,
     webBundle,
-    opts.integrityBlockSign.strategy
+    opts.integrityBlockSign.webBundleId,
+    opts.integrityBlockSign.strategies
   ).sign();
 
-  const origin = new WebBundleId(
-    await opts.integrityBlockSign.strategy.getPublicKey()
-  ).serializeWithIsolatedWebAppOrigin();
-
-  infoLogger(origin);
+  infoLogger(opts.integrityBlockSign.webBundleId);
   return signedWebBundle;
 }
