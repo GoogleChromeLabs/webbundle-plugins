@@ -37,7 +37,7 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "esbuild": "^0.17.15",
+    "esbuild": "^0.25.0",
     "memory-fs": "^0.5.0",
     "webpack": "^5.104.1",
     "@types/webpack": "*"
