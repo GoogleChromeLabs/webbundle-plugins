@@ -36,7 +36,7 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "rollup": "^3.29.5"
+    "rollup": "^3.30.0"
   },
   "engines": {
     "node": ">= 16.0.0"
