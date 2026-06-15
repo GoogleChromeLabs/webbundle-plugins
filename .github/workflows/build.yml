@@ -13,22 +13,20 @@ jobs:
       fail-fast: false
       matrix:
         test-case: [
-            # Lowest supported versions are 1.21.0 for Rollup and 4.0.1 for Webpack.
-            { node: 14.x, rollup: 1.21.0, webpack: 4.0.1 },
-            { node: 14.x, rollup: ^1.21.0, webpack: ^4.0.1 },
-            { node: 14.x, rollup: ^2.0.0, webpack: 5.0.x },
-            { node: 14.x, rollup: ^3.0.0, webpack: ^5.0.0 },
+            { node: 22.x, rollup: 1.21.x, webpack: 5.61.x },
+            { node: 22.x, rollup: ^1.21.0, webpack: ^5.0.0 },
+            { node: 22.x, rollup: ^2.0.0, webpack: 5.61.x },
+            { node: 22.x, rollup: ^3.0.0, webpack: ^5.0.0 },
 
-            { node: 16.x, rollup: 1.21.x, webpack: 4.1.x },
-            { node: 16.x, rollup: ^1.21.0, webpack: ^4.0.1 },
-            { node: 16.x, rollup: ^2.0.0, webpack: 5.0.x },
-            { node: 16.x, rollup: ^3.0.0, webpack: ^5.0.0 },
+            { node: 24.x, rollup: 1.21.x, webpack: 5.61.x },
+            { node: 24.x, rollup: ^1.21.0, webpack: ^5.0.0 },
+            { node: 24.x, rollup: ^2.0.0, webpack: 5.61.x },
+            { node: 24.x, rollup: ^3.0.0, webpack: ^5.0.0 },
 
-            # Node 18 only works with Webpack version ^5.61.x.
-            { node: 18.x, rollup: 1.21.x, webpack: 5.61.x },
-            { node: 18.x, rollup: ^1.21.0, webpack: ^5.0.0 },
-            { node: 18.x, rollup: ^2.0.0, webpack: 5.61.x },
-            { node: 18.x, rollup: ^3.0.0, webpack: ^5.0.0 },
+            { node: 26.x, rollup: 1.21.x, webpack: 5.61.x },
+            { node: 26.x, rollup: ^1.21.0, webpack: ^5.0.0 },
+            { node: 26.x, rollup: ^2.0.0, webpack: 5.61.x },
+            { node: 26.x, rollup: ^3.0.0, webpack: ^5.0.0 },
           ]
 
     steps:
@@ -71,10 +69,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
+      - name: Use Node.js 26.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 26.x
           cache: 'npm'
       - run: npm ci
       - run: npm run lint
