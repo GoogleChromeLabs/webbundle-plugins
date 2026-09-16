@@ -149,6 +149,33 @@ test('addFilesRecursively - refuses root directory being a symbolic link', (t) =
   }
 });
 
+test('addFilesRecursively - refuses directory-symlink loop (prevents ELOOP)', (t) => {
+  const tmpDir = fs.mkdtempSync(
+    path.join(os.tmpdir(), 'wbn-test-symlink-loop-')
+  );
+  try {
+    const loopLink = path.join(tmpDir, 'loop');
+    fs.symlinkSync('.', loopLink);
+
+    const builder = new BundleBuilder();
+    const error = t.throws(
+      () => {
+        addFilesRecursively(builder, 'https://example.com/', tmpDir, {
+          baseURL: 'https://example.com/',
+          output: 'out.wbn',
+        });
+      },
+      { instanceOf: Error }
+    );
+    t.is(
+      error.message,
+      `Refusing to bundle symbolic link at ${loopLink}. Replace it with a regular file or directory.`
+    );
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
 test('addAsset - refuses absolute exchange URL when baseURL is empty', (t) => {
   const builder = new BundleBuilder();
   const error = t.throws(

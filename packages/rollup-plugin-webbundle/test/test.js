@@ -182,6 +182,37 @@ test('static with symbolic link throws error', async (t) => {
   }
 });
 
+test('static with directory-symlink loop throws refusal error without ELOOP', async (t) => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wbn-rollup-loop-'));
+  try {
+    const loopLink = path.join(tmpDir, 'loop');
+    fs.symlinkSync('.', loopLink);
+
+    const bundle = await rollup.rollup({
+      input: 'fixtures/index.js',
+      plugins: [
+        webbundle({
+          output: 'out.wbn',
+          static: { dir: tmpDir },
+        }),
+      ],
+    });
+
+    const error = await t.throwsAsync(
+      async () => {
+        await bundle.generate({ format: 'esm' });
+      },
+      { instanceOf: Error }
+    );
+    t.is(
+      error.message,
+      `Refusing to bundle symbolic link at ${loopLink}. Replace it with a regular file or directory.`
+    );
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
 test('static with scheme-like directory refuses foreign origin', async (t) => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wbn-rollup-foreign-'));
   try {
